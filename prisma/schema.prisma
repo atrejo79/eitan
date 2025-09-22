@@ -14,11 +14,37 @@ datasource db {
   shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
-model User {
+model pacientes {
   id          Int      @id @default(autoincrement())
-  first_name  String
-  last_name   String
-  username    String   @unique
+  nombre      String
+  apellido    String
+  dni         String   @unique
   email       String   @unique
-  createdAt   DateTime @default(now())
+  telefono    String   @unique
+  creacion    DateTime @default(now())
+  turnos      turnos[]
+}
+
+model profesionales {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  apellido    String
+  telefono    String
+  profesion   String
+  creacion    DateTime @default(now())
+  turnos      turnos[]
+}
+
+model turnos {
+  id              Int             @id @default(autoincrement())
+  profesional_id  Int       
+  paciente_id     Int
+  inicio          DateTime
+  fin             DateTime
+  creacion        DateTime        @default(now())
+  profesionales   profesionales   @relation(fields: [profesional_id], references: [id], map: "FK_turnos_profesionales")
+  pacientes       pacientes       @relation(fields: [paciente_id], references: [id], map: "FK_turnos_pacientes")
+
+  @@index([profesional_id], map: "FK_turnos_profesionales")
+  @@index([paciente_id], map: "FK_turnos_pacientes")
 }
