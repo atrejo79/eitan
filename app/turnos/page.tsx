@@ -1,0 +1,229 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+
+// Definición de la clase "Paciente"
+type Paciente = {
+  id: number;
+  nombre: string;
+  apellido: string;
+  dni: string;
+};
+
+// Definición de la clase "Profesional"
+type Profesional = {
+  id: number;
+  nombre: string;
+  apellido: string;
+  profesion: string;
+};
+
+export default function TurnosPage() {
+  // Definición de "variables" (estados locales que usan useState de NextJS)
+  // Estado de control de apertura y cierre del modal
+  const [isOpen, setIsOpen] = useState(false);
+  // Estados de array para llenar las opciones del Select
+  const [pacientes, setPacientes] = useState<Paciente[]>([]);
+  const [profesionales, setProfesionales] = useState<Profesional[]>([]);
+  // Estados para guardar los valores del formulario de registro de turno
+  const [pacienteId, setPacienteId] = useState("");
+  const [profesionalId, setProfesionalId] = useState("");
+  const [fecha, setFecha] = useState("");
+  const [hora, setHora] = useState("");
+  // Estado para el control del loader del registro de turno
+  const [isLoading, setIsLoading] = useState(false);
+  // Estado para mostrar el mensaje de éxito en el modal del formulario
+  const [successMessage, setSuccessMessage] = useState("");
+
+  // Efecto de NextJS para ejecutar llamadas a las API
+  useEffect(() => {
+    // Cargar pacientes
+    fetch("/api/pacientes")
+      .then((res) => res.json())
+      .then((data) => setPacientes(data));
+
+    // Cargar profesionales
+    fetch("/api/profesionales")
+      .then((res) => res.json())
+      .then((data) => setProfesionales(data));
+  }, []); // En este caso no lo uso pero yo podría haber agregado aqui un "estado" (definidos arriba) para que el código dentro de este Effect se ejecute cada vez que cambie el valor
+  // Por ejemplo, si tuviese [isOpen], cada vez que modifico el valor de ese estado con setIsOpen() se ejecutaría el código de adentro
+
+  // Handler del evento de hacer submit del formualrio
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); // Omito el comportamiento por defecto del submit
+    setIsLoading(true); // Activo el loader
+    setSuccessMessage(""); // Borro cualquier mensaje de éxito
+
+    // Defino el "payload" que voy a enviar el post endpoint
+    const nuevoTurno = {
+      profesional_id: profesionalId,
+      paciente_id: pacienteId,
+      fecha, // Esto es lo mismo que poner fecha: fecha,
+      hora,
+    };
+
+    try {
+      const res = await fetch("/api/turnos", { // Defino el endpoint donde voy a hacer el POST
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(nuevoTurno), // Paso en JSON el payload que arme previamente
+      });
+
+      // Si ocurrió algún error en el backend
+      if (!res.ok) {
+        throw new Error("Error al guardar el turno");
+      }
+
+      // Obtengo el json del resultado
+      const data = await res.json();
+
+      // Muestro mensaje de éxito
+      setSuccessMessage("✅ Turno guardado correctamente");
+
+      // Reiniciar los campos del formulario
+      setPacienteId("");
+      setProfesionalId("");
+      setFecha("");
+      setHora("");
+
+      // Cerrar modal después de un tiempo (1500 = 1,5 sec)
+      setTimeout(() => {
+        setIsOpen(false);
+        setSuccessMessage(""); // También borro el mensaje de éxito al cerrar el modal
+      }, 1500);
+    } catch (error) {
+      // Esto se debería cambiar por un mensaje de error personalizado
+      console.error(error);
+      alert("❌ No se pudo guardar el turno");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Y por último los elementos los elementos html de la vista 
+  return (
+    <div className="p-6">
+      {/* Título */}
+      <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100"> 
+        Turnos
+      </h1>
+
+      {/* Botón abrir modal */}
+      <button
+        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        onClick={() => setIsOpen(true)}
+      >
+        Agregar turno
+      </button>
+
+      {/* Modal (sólo visible cuando el estado isOpen es true) */}
+      {isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 shadow-lg">
+            <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
+              Nuevo Turno
+            </h2>
+
+            {/* handleSubmit es el handler que va a ejecutar el post a la api */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Paciente */}
+              <div>
+                <label className="block text-sm font-medium mb-1">Paciente</label>
+                <select
+                  value={pacienteId}
+                  onChange={(e) => setPacienteId(e.target.value)} // Cuando se cambia el valor se actualiza el estado "pacienteId"
+                  className="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+                  required
+                >
+                  <option value="">Seleccione un paciente</option>
+                  {/* Utilizo el estado pacientes que se carga en el useEffect */}
+                  {pacientes.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.apellido} {p.nombre} ({p.dni})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Profesional */}
+              <div>
+                <label className="block text-sm font-medium mb-1">Profesional</label>
+                <select
+                  value={profesionalId}
+                  onChange={(e) => setProfesionalId(e.target.value)} // Cuando se cambia el valor se actualiza el estado "profesionalId"
+                  className="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+                  required
+                >
+                  <option value="">Seleccione un profesional</option>
+                  {/* Utilizo el estado profesionales que se carga en el useEffect */}
+                  {profesionales.map((pr) => (
+                    <option key={pr.id} value={pr.id}>
+                      {pr.apellido} {pr.nombre} ({pr.profesion})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Fecha */}
+              <div>
+                <label className="block text-sm font-medium mb-1">Fecha</label>
+                <input
+                  type="date"
+                  value={fecha}
+                  onChange={(e) => setFecha(e.target.value)} // Cuando se cambia el valor se actualiza el estado "fecha"
+                  className="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+                  required
+                />
+              </div>
+
+              {/* Hora */}
+              <div>
+                <label className="block text-sm font-medium mb-1">Hora</label>
+                <input
+                  type="time"
+                  value={hora}
+                  onChange={(e) => setHora(e.target.value)} // Cuando se cambia el valor se actualiza el estado "hora"
+                  className="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+                  required
+                />
+              </div>
+
+              {/* Mensaje de éxito (sólo visible cuando exista algún mensaje) */}
+              {successMessage && (
+                <p className="text-green-600 dark:text-green-400 text-sm">
+                  {successMessage}
+                </p>
+              )}
+
+              {/* Botones del modal*/}
+              <div className="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-900 dark:text-gray-100 rounded hover:bg-gray-400 dark:hover:bg-gray-500 disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit" // Al hacer el botón de tipo submit, este accione el evento submit del formulario
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isLoading ? (
+                    <span className="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4"></span>
+                  ) : (
+                    "Guardar"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
