@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 
-// Definición de la clase FormularioCliente
+// Definición de la clase Formulario Cliente
 type Form = {
   nombre: string;
   apellido: string;
@@ -13,14 +12,9 @@ type Form = {
 };
 
 export default function RegistrarPacientePage() {
-  const router = useRouter();
-
-  // estado UI (modal + feedback)
-  const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-
-  // estado del form
+  const [isOpen, setIsOpen] = useState(false);     // abre/cierra modal
+  const [isLoading, setIsLoading] = useState(false); // loader del botón
+  const [successMessage, setSuccessMessage] = useState(''); // mensaje ✅
   const [form, setForm] = useState<Form>({
     nombre: '', apellido: '', dni: '', email: '', telefono: '',
   });
@@ -42,18 +36,16 @@ export default function RegistrarPacientePage() {
       });
 
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data?.error ?? 'No se pudo guardar');
-      }
+      if (!res.ok) throw new Error(data?.error ?? 'No se pudo guardar');
 
+      // ÉXITO: mensaje + limpiar formulario
       setSuccessMessage('✅ Paciente guardado correctamente');
       setForm({ nombre: '', apellido: '', dni: '', email: '', telefono: '' });
 
-      // cerrar y mandar a /pacientes
+      // Cerrar el modal
       setTimeout(() => {
         setIsOpen(false);
         setSuccessMessage('');
-        router.replace('/pacientes'); // ir siempre al listado
       }, 1200);
     } catch (err: any) {
       alert('❌ ' + (err?.message ?? 'Error inesperado'));
