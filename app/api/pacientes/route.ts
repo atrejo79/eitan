@@ -10,21 +10,48 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const { nombre, apellido, dni, email, telefono } = await req.json();
-    if (!nombre || !apellido || !dni || !email || !telefono) {
+    const body = await req.json();
+    const {
+      nombre,
+      apellido,
+      documento,
+      email,
+      telefono,
+      fecha_nacimiento, 
+      obra_social_id,
+    } = body;
+
+    if (!nombre || !apellido || !documento || !email || !telefono) {
       return NextResponse.json({ error: 'Faltan campos' }, { status: 400 });
     }
+
     const paciente = await prisma.pacientes.create({
       data: {
         nombre,
         apellido,
-        dni,
-        email, 
-        telefono
+        documento,
+        email,
+        telefono,
+        fecha_nacimiento: toUTCDate(fecha_nacimiento),
+        obra_social_id: obra_social_id ?? null,
       },
     });
+
     return NextResponse.json({ ok: true, paciente });
-  } catch (err: any) {
-    return NextResponse.json({ error: err?.message ?? 'Error inesperado' }, { status: 500 });
+  } catch (e: any) {
+    if (e?.code === 'P2002') {
+      return NextResponse.json({ error: 'Documento o email ya existen.' }, { status: 409 });
+    }
+    if (e?.name === 'PrismaClientValidationError') {
+      return NextResponse.json({ error: 'Datos inválidos.' }, { status: 400 });
+    }
+    return NextResponse.json({ error: e?.message ?? 'Error inesperado' }, { status: 500 });
+  }
+
+  function toUTCDate(isoYYYYMMDD?: string | null) {
+    if (!isoYYYYMMDD) return null;
+    const [y, m, d] = isoYYYYMMDD.split('-').map(Number);
+    if (!y || !m || !d) return null;
+    return new Date(Date.UTC(y, m - 1, d)); // medianoche UTC
   }
 }
