@@ -94,6 +94,7 @@ model usuarios {
   nombre        String          @db.VarChar(120)
   apellido      String          @db.VarChar(120)
   email         String?         @unique(map: "email") @db.VarChar(120)
+  contrasena    String          @db.VarChar(100)
   telefono      String?         @db.VarChar(40)
   rol_id        Int
   estado        usuarios_estado @default(activo)
