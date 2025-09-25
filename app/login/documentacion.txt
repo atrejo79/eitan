@@ -1,0 +1,4 @@
+instalar para que funcione
+
+npm install bcryptjs
+npm install --save-dev @types/bcryptjs
