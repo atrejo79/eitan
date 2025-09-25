@@ -1,50 +1,138 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
   shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 model pacientes {
-  id          Int      @id @default(autoincrement())
-  nombre      String
-  apellido    String
-  dni         String   @unique
-  email       String   @unique
-  telefono    String   @unique
-  creacion    DateTime @default(now())
-  turnos      turnos[]
+  paciente_id      Int              @id @default(autoincrement())
+  nombre           String           @db.VarChar(120)
+  documento        String?          @unique(map: "documento") @db.VarChar(40)
+  email            String?          @unique(map: "email") @db.VarChar(120)
+  telefono         String?          @db.VarChar(40)
+  fecha_nacimiento DateTime?        @db.Date
+  obra_social_id   Int?
+  estado           pacientes_estado @default(activo)
+  obras_sociales   obras_sociales?  @relation(fields: [obra_social_id], references: [obra_social_id], map: "fk_paciente_os")
+  turnos           turnos[]
+
+  @@index([obra_social_id], map: "fk_paciente_os")
 }
 
 model profesionales {
-  id          Int      @id @default(autoincrement())
-  nombre      String
-  apellido    String
-  telefono    String
-  profesion   String
-  creacion    DateTime @default(now())
-  turnos      turnos[]
+  profesional_id Int                  @id @default(autoincrement())
+  usuario_id     Int                  @unique(map: "usuario_id")
+  profesion_id   Int
+  matricula      String?              @db.VarChar(60)
+  estado         profesionales_estado @default(activo)
+  agenda_semanal agenda_semanal[]
+  profesiones    profesiones          @relation(fields: [profesion_id], references: [profesion_id], onUpdate: Restrict, map: "fk_prof_profesion")
+  usuarios       usuarios             @relation(fields: [usuario_id], references: [usuario_id], map: "fk_prof_usuario")
+  turnos         turnos[]
+
+  @@index([profesion_id], map: "ix_prof_profesion")
 }
 
 model turnos {
-  id              Int             @id @default(autoincrement())
-  profesional_id  Int       
-  paciente_id     Int
-  inicio          DateTime
-  fin             DateTime
-  creacion        DateTime        @default(now())
-  profesionales   profesionales   @relation(fields: [profesional_id], references: [id], map: "FK_turnos_profesionales")
-  pacientes       pacientes       @relation(fields: [paciente_id], references: [id], map: "FK_turnos_pacientes")
+  turno_id       Int             @id @default(autoincrement())
+  profesional_id Int
+  paciente_id    Int
+  obra_social_id Int?
+  inicio         DateTime        @db.DateTime(0)
+  duracion_min   Int             @db.SmallInt
+  fin            DateTime?       @db.DateTime(0)
+  estado         turnos_estado   @default(reservado)
+  obras_sociales obras_sociales? @relation(fields: [obra_social_id], references: [obra_social_id], onDelete: Restrict, map: "fk_turno_os")
+  pacientes      pacientes       @relation(fields: [paciente_id], references: [paciente_id], map: "FK_turnos_pacientes")
+  profesionales  profesionales   @relation(fields: [profesional_id], references: [profesional_id], map: "FK_turnos_profesionales")
 
-  @@index([profesional_id], map: "FK_turnos_profesionales")
-  @@index([paciente_id], map: "FK_turnos_pacientes")
+  @@index([obra_social_id], map: "fk_turno_os")
+  @@index([paciente_id, inicio], map: "ix_turnos_paciente")
+  @@index([profesional_id, inicio], map: "ix_turnos_prof_inicio")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model agenda_semanal {
+  agenda_id      Int                   @id @default(autoincrement())
+  profesional_id Int
+  dia_semana     Int                   @db.TinyInt
+  hora_inicio    DateTime              @db.Time(0)
+  hora_fin       DateTime              @db.Time(0)
+  slot_min       Int                   @db.SmallInt
+  estado         agenda_semanal_estado @default(activo)
+  profesionales  profesionales         @relation(fields: [profesional_id], references: [profesional_id], onDelete: Cascade, map: "fk_agenda_prof")
+
+  @@unique([profesional_id, dia_semana, hora_inicio, hora_fin], map: "uq_agenda")
+}
+
+model obras_sociales {
+  obra_social_id Int                   @id @default(autoincrement())
+  nombre         String                @unique(map: "nombre") @db.VarChar(120)
+  estado         obras_sociales_estado @default(activa)
+  pacientes      pacientes[]
+  turnos         turnos[]
+}
+
+model profesiones {
+  profesion_id  Int             @id @default(autoincrement())
+  nombre        String          @unique(map: "nombre") @db.VarChar(80)
+  profesionales profesionales[]
+}
+
+model roles {
+  rol_id   Int        @id @default(autoincrement())
+  nombre   String     @unique(map: "nombre") @db.VarChar(40)
+  usuarios usuarios[]
+}
+
+model usuarios {
+  usuario_id    Int             @id @default(autoincrement())
+  nombre        String          @db.VarChar(120)
+  apellido      String          @db.VarChar(120)
+  email         String?         @unique(map: "email") @db.VarChar(120)
+  contrasena    String          @db.VarChar(100)
+  telefono      String?         @db.VarChar(40)
+  rol_id        Int
+  estado        usuarios_estado @default(activo)
+  profesionales profesionales?
+  roles         roles           @relation(fields: [rol_id], references: [rol_id], onUpdate: Restrict, map: "fk_usuarios_rol")
+
+  @@index([rol_id], map: "fk_usuarios_rol")
+}
+
+enum obras_sociales_estado {
+  activa
+  inactiva
+}
+
+enum profesionales_estado {
+  activo
+  inactivo
+}
+
+enum agenda_semanal_estado {
+  activo
+  inactivo
+}
+
+enum usuarios_estado {
+  activo
+  inactivo
+}
+
+enum turnos_estado {
+  reservado
+  confirmado
+  cancelado
+  no_show
+  atendido
+}
+
+enum pacientes_estado {
+  activo
+  inactivo
 }

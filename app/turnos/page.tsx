@@ -2,20 +2,50 @@
 
 import React, { useState, useEffect } from "react";
 
+// Definición de la clase "Turno"
+type Turno = {
+  turno_id: number;
+  // Dentro del turno tengo los datos del profesional
+  profesionales: {
+    matricula: string;
+    usuarios: {
+      nombre: string;
+      apellido: string;
+    },
+    profesiones: {
+      nombre: string;
+    }
+  };
+  // Y los datos del paciente
+  pacientes: {
+    nombre: string;
+    apellido: string;
+    documento: string;
+  };
+  // Además de las fechas y hora de inicio y fin
+  inicio: string;
+  fin: string;
+};
+
 // Definición de la clase "Paciente"
 type Paciente = {
-  id: number;
+  paciente_id: number;
   nombre: string;
   apellido: string;
-  dni: string;
+  documento: string;
 };
 
 // Definición de la clase "Profesional"
 type Profesional = {
-  id: number;
-  nombre: string;
-  apellido: string;
-  profesion: string;
+  profesional_id: number;
+  matricula: string;
+  usuarios: {
+    nombre: string;
+    apellido: string;
+  },
+  profesiones: {
+    nombre: string;
+  }
 };
 
 export default function TurnosPage() {
@@ -34,6 +64,9 @@ export default function TurnosPage() {
   const [isLoading, setIsLoading] = useState(false);
   // Estado para mostrar el mensaje de éxito en el modal del formulario
   const [successMessage, setSuccessMessage] = useState("");
+  // Estados para visualizar los turnos
+  const [isLoadingTurnos, setIsLoadingTurnos] = useState(true);
+  const [turnos, setTurnos] = useState<Turno[]>([]);
 
   // Efecto de NextJS para ejecutar llamadas a las API
   useEffect(() => {
@@ -89,6 +122,9 @@ export default function TurnosPage() {
       setFecha("");
       setHora("");
 
+      // Actualizar listado de turnos
+      await cargarTurnos();
+
       // Cerrar modal después de un tiempo (1500 = 1,5 sec)
       setTimeout(() => {
         setIsOpen(false);
@@ -101,6 +137,69 @@ export default function TurnosPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Función que se encarga de obtener los turnos desde la api
+  const cargarTurnos = async () => {
+    // Mostrar un loader
+    setIsLoadingTurnos(true);
+    try {
+      // Obtener turnos desde la api
+      const res = await fetch("/api/turnos");
+      console.log(res);
+      // Convertir el resultado a json
+      const data = await res.json();
+
+      // Ordenar por fecha y hora
+      data.sort(
+        (a: Turno, b: Turno) =>
+          new Date(a.inicio).getTime() - new Date(b.inicio).getTime()
+      );
+
+      // Setear el estado "turnos" con los resultados del get a la api de turnos
+      setTurnos(data);
+    } catch (error) {
+      console.error("Error cargando turnos", error);
+      alert("❌ Error al cargar los turnos");
+    } finally {
+      // Ocultar el loader
+      setIsLoadingTurnos(false);
+    }
+  };
+
+  // Efecto para cargar los turnos al ingresar a la página
+  useEffect(() => {
+    cargarTurnos();
+  }, []);
+
+  // 📅 Funciones para calcular la semana actual
+  const getStartOfWeek = (date: Date) => {
+    const day = date.getDay(); // 0=Dom, 1=Lun...
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1); // que empiece en Lunes
+    return new Date(date.setDate(diff));
+  };
+
+  const startOfWeek = getStartOfWeek(new Date());
+  const daysOfWeek = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(startOfWeek);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+
+  const turnosPorDia = (day: Date) => {
+    return turnos
+      .filter((t) => {
+        const inicio = new Date(t.inicio);
+        return (
+          inicio.getFullYear() === day.getFullYear() &&
+          inicio.getMonth() === day.getMonth() &&
+          inicio.getDate() === day.getDate()
+        );
+      })
+      .sort(
+        (a, b) =>
+          new Date(a.inicio).getTime() - new Date(b.inicio).getTime()
+      );
   };
 
   // Y por último los elementos los elementos html de la vista 
@@ -118,6 +217,66 @@ export default function TurnosPage() {
       >
         Agregar turno
       </button>
+
+      {/* Loader mientras carga turnos */}
+      {isLoadingTurnos ? (
+        <div className="mt-4 text-gray-600 dark:text-gray-300">
+          Cargando turnos...
+        </div>
+      ) : (
+        <div className="grid grid-cols-7 gap-4 mt-6">
+          {daysOfWeek.map((day, idx) => (
+            <div
+              key={idx}
+              className="border rounded-lg p-2 bg-gray-50 dark:bg-gray-900 dark:border-gray-700"
+            >
+              <h3 className="font-bold text-center text-gray-800 dark:text-gray-200 mb-2">
+                {day.toLocaleDateString("es-AR", {
+                  weekday: "short",
+                  day: "numeric",
+                  month: "short",
+                })}
+              </h3>
+              <div className="space-y-2">
+                {turnosPorDia(day).length === 0 ? (
+                  <p className="text-gray-500 text-sm text-center">
+                    Sin turnos
+                  </p>
+                ) : (
+                  turnosPorDia(day).map((t) => {
+                    const inicio = new Date(t.inicio);
+                    const fin = new Date(t.fin);
+                    return (
+                      <div
+                        key={t.turno_id}
+                        className="p-2 bg-white dark:bg-gray-800 border dark:border-gray-600 rounded shadow-sm"
+                      >
+                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                          {t.profesionales.usuarios.apellido} {t.profesionales.usuarios.nombre}
+                        </p>
+                        <p className="text-xs text-gray-600 dark:text-gray-300">
+                          Paciente: {t.pacientes.apellido} {t.pacientes.nombre}
+                        </p>
+                        <p className="text-xs text-gray-600 dark:text-gray-300">
+                          {inicio.toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}{" "}
+                          -{" "}
+                          {fin.toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Modal (sólo visible cuando el estado isOpen es true) */}
       {isOpen && (
@@ -141,8 +300,8 @@ export default function TurnosPage() {
                   <option value="">Seleccione un paciente</option>
                   {/* Utilizo el estado pacientes que se carga en el useEffect */}
                   {pacientes.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.apellido} {p.nombre} ({p.dni})
+                    <option key={p.paciente_id} value={p.paciente_id}>
+                      {p.apellido} {p.nombre} ({p.documento})
                     </option>
                   ))}
                 </select>
@@ -160,8 +319,8 @@ export default function TurnosPage() {
                   <option value="">Seleccione un profesional</option>
                   {/* Utilizo el estado profesionales que se carga en el useEffect */}
                   {profesionales.map((pr) => (
-                    <option key={pr.id} value={pr.id}>
-                      {pr.apellido} {pr.nombre} ({pr.profesion})
+                    <option key={pr.profesional_id} value={pr.profesional_id}>
+                      {pr.usuarios.apellido} {pr.usuarios.nombre} ({pr.profesiones.nombre})
                     </option>
                   ))}
                 </select>
