@@ -1,4 +1,3 @@
-// app/login/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -30,13 +29,10 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (data.success) {
-        // Guardar token en cookies
-        Cookies.set('token', data.token, { expires: 1 });
-        
-        // Guardar información del usuario en localStorage
+        // Guardar info del usuario
         localStorage.setItem('user', JSON.stringify(data.user));
         
-        // Redireccionar según el rol
+        // 🎯 AQUÍ SE HACE LA REDIRECCIÓN
         router.push(data.redirectPath);
       } else {
         setError(data.message);
@@ -100,12 +96,6 @@ export default function LoginPage() {
           >
             {loading ? 'Ingresando...' : 'Ingresar'}
           </button>
-
-          <div className="text-center text-sm text-gray-600">
-            <a href="#" className="text-indigo-600 hover:text-indigo-500">
-              ¿Olvidaste tu contraseña?
-            </a>
-          </div>
         </form>
       </div>
     </div>
