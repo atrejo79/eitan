@@ -4,18 +4,23 @@ import React, { useState, useEffect } from "react";
 
 // Definición de la clase "Turno"
 type Turno = {
-  id: number;
+  turno_id: number;
   // Dentro del turno tengo los datos del profesional
   profesionales: {
-    nombre: string;
-    apellido: string;
-    profesion: string;
+    matricula: string;
+    usuarios: {
+      nombre: string;
+      apellido: string;
+    },
+    profesiones: {
+      nombre: string;
+    }
   };
   // Y los datos del paciente
   pacientes: {
     nombre: string;
     apellido: string;
-    dni: string;
+    documento: string;
   };
   // Además de las fechas y hora de inicio y fin
   inicio: string;
@@ -24,18 +29,23 @@ type Turno = {
 
 // Definición de la clase "Paciente"
 type Paciente = {
-  id: number;
+  paciente_id: number;
   nombre: string;
   apellido: string;
-  dni: string;
+  documento: string;
 };
 
 // Definición de la clase "Profesional"
 type Profesional = {
-  id: number;
-  nombre: string;
-  apellido: string;
-  profesion: string;
+  profesional_id: number;
+  matricula: string;
+  usuarios: {
+    nombre: string;
+    apellido: string;
+  },
+  profesiones: {
+    nombre: string;
+  }
 };
 
 export default function TurnosPage() {
@@ -136,6 +146,7 @@ export default function TurnosPage() {
     try {
       // Obtener turnos desde la api
       const res = await fetch("/api/turnos");
+      console.log(res);
       // Convertir el resultado a json
       const data = await res.json();
 
@@ -237,11 +248,11 @@ export default function TurnosPage() {
                     const fin = new Date(t.fin);
                     return (
                       <div
-                        key={t.id}
+                        key={t.turno_id}
                         className="p-2 bg-white dark:bg-gray-800 border dark:border-gray-600 rounded shadow-sm"
                       >
                         <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                          {t.profesionales.apellido} {t.profesionales.nombre}
+                          {t.profesionales.usuarios.apellido} {t.profesionales.usuarios.nombre}
                         </p>
                         <p className="text-xs text-gray-600 dark:text-gray-300">
                           Paciente: {t.pacientes.apellido} {t.pacientes.nombre}
@@ -289,8 +300,8 @@ export default function TurnosPage() {
                   <option value="">Seleccione un paciente</option>
                   {/* Utilizo el estado pacientes que se carga en el useEffect */}
                   {pacientes.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.apellido} {p.nombre} ({p.dni})
+                    <option key={p.paciente_id} value={p.paciente_id}>
+                      {p.apellido} {p.nombre} ({p.documento})
                     </option>
                   ))}
                 </select>
@@ -308,8 +319,8 @@ export default function TurnosPage() {
                   <option value="">Seleccione un profesional</option>
                   {/* Utilizo el estado profesionales que se carga en el useEffect */}
                   {profesionales.map((pr) => (
-                    <option key={pr.id} value={pr.id}>
-                      {pr.apellido} {pr.nombre} ({pr.profesion})
+                    <option key={pr.profesional_id} value={pr.profesional_id}>
+                      {pr.usuarios.apellido} {pr.usuarios.nombre} ({pr.profesiones.nombre})
                     </option>
                   ))}
                 </select>
