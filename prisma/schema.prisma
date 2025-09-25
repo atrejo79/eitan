@@ -11,6 +11,7 @@ datasource db {
 model pacientes {
   paciente_id      Int              @id @default(autoincrement())
   nombre           String           @db.VarChar(120)
+  apellido         String           @db.VarChar(120)
   documento        String?          @unique(map: "documento") @db.VarChar(40)
   email            String?          @unique(map: "email") @db.VarChar(120)
   telefono         String?          @db.VarChar(40)
