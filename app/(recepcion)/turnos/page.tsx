@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 
-// Íconos SVG personalizados
+// ===== Íconos SVG personalizados =====
 const Plus = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -48,7 +48,20 @@ const X = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// Definición de tipos
+// === NUEVOS ÍCONOS PARA NAVEGAR SEMANAS ===
+const ChevronLeft = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <polyline points="15,18 9,12 15,6"></polyline>
+  </svg>
+);
+
+const ChevronRight = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <polyline points="9,18 15,12 9,6"></polyline>
+  </svg>
+);
+
+// ===== Tipos =====
 type Turno = {
   turno_id: number;
   profesionales: {
@@ -56,10 +69,10 @@ type Turno = {
     usuarios: {
       nombre: string;
       apellido: string;
-    },
+    };
     profesiones: {
       nombre: string;
-    }
+    };
   };
   pacientes: {
     nombre: string;
@@ -83,10 +96,10 @@ type Profesional = {
   usuarios: {
     nombre: string;
     apellido: string;
-  },
+  };
   profesiones: {
     nombre: string;
-  }
+  };
 };
 
 export default function TurnosPage() {
@@ -102,14 +115,49 @@ export default function TurnosPage() {
   const [isLoadingTurnos, setIsLoadingTurnos] = useState(true);
   const [turnos, setTurnos] = useState<Turno[]>([]);
 
-  useEffect(() => {
-    fetch("/api/pacientes")
-      .then((res) => res.json())
-      .then((data) => setPacientes(data));
+  // ===== Helpers de fecha / semana =====
+  const getStartOfWeek = (date: Date) => {
+    const d = new Date(date); // no mutar parámetro
+    const day = d.getDay(); // 0 dom, 1 lun, ..., 6 sáb
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // llevar a lunes
+    d.setDate(diff);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  };
 
-    fetch("/api/profesionales")
-      .then((res) => res.json())
-      .then((data) => setProfesionales(data));
+  const addDays = (date: Date, days: number) => {
+    const d = new Date(date);
+    d.setDate(d.getDate() + days);
+    return d;
+  };
+
+  // === NUEVO: estado para controlar la semana visible ===
+  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => getStartOfWeek(new Date()));
+
+  // Rango de días a mostrar (depende de currentWeekStart)
+  const daysOfWeek = Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i));
+
+  // Label bonito de rango semanal (p.ej. "23–29 sep 2025")
+  const weekRangeLabel = (() => {
+    const start = daysOfWeek[0];
+    const end = daysOfWeek[6];
+    const fmtDay = (d: Date) => d.getDate().toString();
+    const fmtMonthShort = (d: Date) =>
+      d.toLocaleDateString("es-AR", { month: "short" }).replace(".", "");
+    const fmtYear = (d: Date) => d.getFullYear().toString();
+
+    if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()) {
+      return `${fmtDay(start)}–${fmtDay(end)} ${fmtMonthShort(end)} ${fmtYear(end)}`;
+    } else if (start.getFullYear() === end.getFullYear()) {
+      return `${fmtDay(start)} ${fmtMonthShort(start)} – ${fmtDay(end)} ${fmtMonthShort(end)} ${fmtYear(end)}`;
+    } else {
+      return `${fmtDay(start)} ${fmtMonthShort(start)} ${fmtYear(start)} – ${fmtDay(end)} ${fmtMonthShort(end)} ${fmtYear(end)}`;
+    }
+  })();
+
+  useEffect(() => {
+    fetch("/api/pacientes").then((res) => res.json()).then(setPacientes);
+    fetch("/api/profesionales").then((res) => res.json()).then(setProfesionales);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -127,17 +175,12 @@ export default function TurnosPage() {
     try {
       const res = await fetch("/api/turnos", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(nuevoTurno),
       });
+      if (!res.ok) throw new Error("Error al guardar el turno");
 
-      if (!res.ok) {
-        throw new Error("Error al guardar el turno");
-      }
-
-      const data = await res.json();
+      await res.json();
       setSuccessMessage("Turno guardado correctamente");
 
       setPacienteId("");
@@ -163,11 +206,10 @@ export default function TurnosPage() {
     setIsLoadingTurnos(true);
     try {
       const res = await fetch("/api/turnos");
-      const data = await res.json();
+      const data: Turno[] = await res.json();
 
       data.sort(
-        (a: Turno, b: Turno) =>
-          new Date(a.inicio).getTime() - new Date(b.inicio).getTime()
+        (a, b) => new Date(a.inicio).getTime() - new Date(b.inicio).getTime()
       );
 
       setTurnos(data);
@@ -183,19 +225,6 @@ export default function TurnosPage() {
     cargarTurnos();
   }, []);
 
-  const getStartOfWeek = (date: Date) => {
-    const day = date.getDay();
-    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-    return new Date(date.setDate(diff));
-  };
-
-  const startOfWeek = getStartOfWeek(new Date());
-  const daysOfWeek = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(startOfWeek);
-    d.setDate(d.getDate() + i);
-    return d;
-  });
-
   const turnosPorDia = (day: Date) => {
     return turnos
       .filter((t) => {
@@ -206,33 +235,68 @@ export default function TurnosPage() {
           inicio.getDate() === day.getDate()
         );
       })
-      .sort(
-        (a, b) =>
-          new Date(a.inicio).getTime() - new Date(b.inicio).getTime()
-      );
+      .sort((a, b) => new Date(a.inicio).getTime() - new Date(b.inicio).getTime());
   };
 
-  // Función para obtener color según la profesión
+  // Color por profesión
   const getColorByProfession = (profesion: string) => {
     const colors: { [key: string]: string } = {
-      'Médico': 'from-blue-400 to-blue-500',
-      'Enfermero': 'from-green-400 to-green-500',
-      'Odontólogo': 'from-purple-400 to-purple-500',
-      'Psicólogo': 'from-pink-400 to-pink-500',
-      'Nutricionista': 'from-yellow-400 to-yellow-500',
-      'default': 'from-orange-400 to-yellow-400'
+      Médico: "from-blue-400 to-blue-500",
+      Enfermero: "from-green-400 to-green-500",
+      Odontólogo: "from-purple-400 to-purple-500",
+      Psicólogo: "from-pink-400 to-pink-500",
+      Nutricionista: "from-yellow-400 to-yellow-500",
+      default: "from-orange-400 to-yellow-400",
     };
-    return colors[profesion] || colors['default'];
+    return colors[profesion] || colors["default"];
   };
+
+  // === Handlers para navegar semanas ===
+  const goPrevWeek = () => setCurrentWeekStart((d) => addDays(d, -7));
+  const goNextWeek = () => setCurrentWeekStart((d) => addDays(d, +7));
+  const goTodayWeek = () => setCurrentWeekStart(getStartOfWeek(new Date()));
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">
-          Calendario de turnos
-        </h1>
-        <p className="text-gray-600">Visualizacion de los turnos médicos del consultorio</p>
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">Calendario de turnos</h1>
+        <p className="text-gray-600">Visualización de los turnos médicos del consultorio</p>
+      </div>
+
+      {/* === NUEVO: Barra de navegación semanal === */}
+      <div className="mb-4 flex items-center gap-3 justify-between">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={goPrevWeek}
+            className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-100 transition"
+            aria-label="Semana anterior"
+            title="Semana anterior"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+
+          <button
+            onClick={goTodayWeek}
+            className="px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-100 transition text-sm font-medium"
+            title="Volver a la semana actual"
+          >
+            Hoy
+          </button>
+
+          <button
+            onClick={goNextWeek}
+            className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-100 transition"
+            aria-label="Semana siguiente"
+            title="Semana siguiente"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="text-sm md:text-base text-gray-700 font-semibold">
+          Semana: <span className="text-orange-600">{weekRangeLabel}</span>
+        </div>
       </div>
 
       {/* Botón agregar turno */}
@@ -259,21 +323,21 @@ export default function TurnosPage() {
           {daysOfWeek.map((day, idx) => {
             const isToday = new Date().toDateString() === day.toDateString();
             const turnosDelDia = turnosPorDia(day);
-            
+
             return (
               <div
                 key={idx}
                 className={`border rounded-xl p-3 transition-all duration-200 ${
-                  isToday 
-                    ? 'bg-gradient-to-br from-orange-50 to-yellow-50 border-orange-300 shadow-lg' 
-                    : 'bg-white hover:shadow-md border-gray-200'
+                  isToday
+                    ? "bg-gradient-to-br from-orange-50 to-yellow-50 border-orange-300 shadow-lg"
+                    : "bg-white hover:shadow-md border-gray-200"
                 }`}
               >
                 <div className="mb-3 text-center">
-                  <h3 className={`font-bold ${isToday ? 'text-orange-600' : 'text-gray-700'}`}>
+                  <h3 className={`font-bold ${isToday ? "text-orange-600" : "text-gray-700"}`}>
                     {day.toLocaleDateString("es-AR", { weekday: "short" })}
                   </h3>
-                  <p className={`text-2xl font-bold ${isToday ? 'text-orange-500' : 'text-gray-800'}`}>
+                  <p className={`text-2xl font-bold ${isToday ? "text-orange-500" : "text-gray-800"}`}>
                     {day.getDate()}
                   </p>
                   <p className="text-xs text-gray-500">
@@ -283,50 +347,37 @@ export default function TurnosPage() {
 
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {turnosDelDia.length === 0 ? (
-                    <p className="text-gray-400 text-xs text-center py-4">
-                      Sin turnos
-                    </p>
+                    <p className="text-gray-400 text-xs text-center py-4">Sin turnos</p>
                   ) : (
                     turnosDelDia.map((t) => {
                       const inicio = new Date(t.inicio);
                       const fin = new Date(t.fin);
                       const colorGradient = getColorByProfession(t.profesionales.profesiones.nombre);
-                      
+
                       return (
                         <div
                           key={t.turno_id}
                           className={`p-2 rounded-lg bg-gradient-to-r ${colorGradient} text-white shadow-sm 
-                                    hover:shadow-md transform transition-all duration-200 hover:scale-[1.02] cursor-pointer`}
+                                      hover:shadow-md transform transition-all duration-200 hover:scale-[1.02] cursor-pointer`}
                         >
                           <div className="flex items-center gap-1 mb-1">
                             <Clock className="w-3 h-3" />
                             <p className="text-xs font-semibold">
-                              {inicio.toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                              {" - "}
-                              {fin.toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
+                              {inicio.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}{" - "}
+                              {fin.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                             </p>
                           </div>
-                          
-                          <p className="text-xs font-bold truncate">
-                            Dr. {t.profesionales.usuarios.apellido}
-                          </p>
-                          
+
+                          <p className="text-xs font-bold truncate">Dr. {t.profesionales.usuarios.apellido}</p>
+
                           <div className="flex items-center gap-1 mt-1">
                             <User className="w-3 h-3" />
                             <p className="text-xs truncate opacity-90">
                               {t.pacientes.apellido} {t.pacientes.nombre}
                             </p>
                           </div>
-                          
-                          <p className="text-xs opacity-75 mt-1">
-                            {t.profesionales.profesiones.nombre}
-                          </p>
+
+                          <p className="text-xs opacity-75 mt-1">{t.profesionales.profesiones.nombre}</p>
                         </div>
                       );
                     })
@@ -370,7 +421,9 @@ export default function TurnosPage() {
                            focus:ring-orange-400 focus:border-transparent transition-all duration-200"
                   required
                 >
-                  <option value="" disabled hidden>Seleccione un paciente</option>
+                  <option value="" disabled hidden>
+                    Seleccione un paciente
+                  </option>
                   {pacientes.map((p) => (
                     <option key={p.paciente_id} value={p.paciente_id}>
                       {p.apellido} {p.nombre} - DNI: {p.documento}
@@ -401,9 +454,8 @@ export default function TurnosPage() {
                 </select>
               </div>
 
-              {/* Fecha y Hora en la misma línea */}
+              {/* Fecha y Hora */}
               <div className="grid grid-cols-2 gap-4">
-                {/* Fecha */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-orange-400" />
@@ -419,7 +471,6 @@ export default function TurnosPage() {
                   />
                 </div>
 
-                {/* Hora */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                     <Clock className="w-4 h-4 text-orange-400" />
@@ -436,14 +487,12 @@ export default function TurnosPage() {
                 </div>
               </div>
 
-              {/* Mensaje de éxito */}
               {successMessage && (
                 <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
                   <p className="text-sm font-medium">✓ {successMessage}</p>
                 </div>
               )}
 
-              {/* Botones */}
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
