@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     const roleName = usuario.roles.nombre.toLowerCase();
     
     if (roleName === 'recepcion') {
-      redirectPath = '/mesa_entrada';  // 👈 Cambiar aquí para recepción
+      redirectPath = '/turnos';  // 👈 Cambiar aquí para recepción
     } else if (roleName === 'profesional') {
       redirectPath = '/turnos';    // 👈 Cambiar aquí para profesional
     } else {
