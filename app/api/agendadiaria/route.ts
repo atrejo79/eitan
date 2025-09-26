@@ -1,23 +1,25 @@
 import { NextResponse } from "next/server";
-import { prisma, Prisma } from "@/lib/prisma"; // o `import { Prisma } from '@prisma/client'`
+import { prisma } from "@/lib/prisma";
 
-// Tipo con relaciones que incluye tu consulta
-type TurnoWithRels = Prisma.turnosGetPayload<{
-  include: {
-    pacientes: true;
-    profesionales: { include: { usuarios: true; profesiones: true } };
-    obras_sociales: true;
-  };
-}>;
-
+/**
+ * GET /api/agendadiaria
+ * 
+ * Parámetros (query params):
+ * - profesional_id: ID del profesional (obligatorio)
+ * - fecha: Fecha en formato YYYY-MM-DD (opcional)
+ * 
+ * Funcionalidad:
+ * Devuelve los turnos asignados a un profesional en un día específico.
+ * Si no se envía la fecha, devuelve todos los turnos del profesional.
+ */
 export async function GET(req: Request) {
   try {
+    // Obtener parámetros de la URL
     const { searchParams } = new URL(req.url);
     const profesionalId = searchParams.get("profesional_id");
-    const fecha = searchParams.get("fecha");
-    const horario = searchParams.get("horario");
-    const estado = searchParams.get("estado");
+    const fecha = searchParams.get("fecha"); // YYYY-MM-DD
 
+    // Validar profesional_id
     if (!profesionalId) {
       return NextResponse.json(
         { error: "Debe especificar un profesional_id" },
@@ -25,48 +27,40 @@ export async function GET(req: Request) {
       );
     }
 
-    const where: any = { profesional_id: Number(profesionalId) };
+    // Filtro base (por profesional)
+    let where: any = { profesional_id: Number(profesionalId) };
 
+    // Si se pasa fecha, se construye el rango de ese día [00:00 → 23:59]
     if (fecha) {
-      const inicioDia = new Date(`${fecha}T00:00:00-03:00`);
-      const finDia    = new Date(`${fecha}T23:59:59.999-03:00`);
-      let gte = inicioDia, lte = finDia;
-
-      if (horario === "maniana") {
-        gte = new Date(`${fecha}T08:00:00-03:00`);
-        lte = new Date(`${fecha}T11:59:59.999-03:00`);
-      } else if (horario === "tarde") {
-        gte = new Date(`${fecha}T12:00:00-03:00`);
-        lte = new Date(`${fecha}T18:00:00.000-03:00`);
-      }
-      where.inicio = { gte, lte };
+      const inicio = new Date(`${fecha}T00:00:00`);
+      const fin = new Date(`${fecha}T23:59:59.999`);
+      where.inicio = { gte: inicio, lte: fin };
     }
 
-    if (estado === "ocupados") where.paciente_id = { not: null };
-    else if (estado === "libres") where.paciente_id = null;
-
-    // Tipá el resultado para que el map infiera `t`
-    const turnos: TurnoWithRels[] = await prisma.turnos.findMany({
+    // Consulta a la base de datos con Prisma
+    const turnos = await prisma.turnos.findMany({
       where,
       include: {
-        pacientes: true,
-        profesionales: { include: { usuarios: true, profesiones: true } },
-        obras_sociales: true,
+        pacientes: true, // datos del paciente
+        profesionales: { include: { usuarios: true } }, // datos del profesional y su usuario
+        obras_sociales: true, // obra social asociada
       },
-      orderBy: { inicio: "asc" },
+      orderBy: { inicio: "asc" }, // ordenar cronológicamente
     });
 
-    // Ahora `t` NO es any
+    // Convertir BigInt → String para evitar problemas con JSON
     const serialized = turnos.map((t) => ({
       ...t,
       turno_id: t.turno_id.toString(),
-      inicio: t.inicio instanceof Date ? t.inicio.toISOString() : t.inicio,
-      fin: t.fin instanceof Date ? t.fin.toISOString() : t.fin,
     }));
 
+    // Respuesta exitosa
     return NextResponse.json(serialized);
   } catch (error) {
     console.error("Error obteniendo turnos:", error);
-    return NextResponse.json({ error: "Error interno en el servidor" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Error interno en el servidor" },
+      { status: 500 }
+    );
   }
 }

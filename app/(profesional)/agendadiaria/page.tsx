@@ -3,19 +3,17 @@
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-// Íconos SVG personalizados
+// ── Iconos (igual que los tuyos) ───────────────────────────────────────────────
 const ChevronLeft = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <polyline points="15,18 9,12 15,6"></polyline>
   </svg>
 );
-
 const ChevronRight = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <polyline points="9,18 15,12 9,6"></polyline>
   </svg>
 );
-
 const Calendar = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -24,34 +22,29 @@ const Calendar = ({ className }: { className?: string }) => (
     <line x1="3" y1="10" x2="21" y2="10"></line>
   </svg>
 );
-
 const Clock = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <circle cx="12" cy="12" r="10"></circle>
     <polyline points="12,6 12,12 16,14"></polyline>
   </svg>
 );
-
 const Filter = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46 22,3"></polygon>
   </svg>
 );
-
 const User = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
     <circle cx="12" cy="7" r="4"></circle>
   </svg>
 );
-
 const CheckCircle = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
     <polyline points="22,4 12,14.01 9,11.01"></polyline>
   </svg>
 );
-
 const X = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -59,6 +52,7 @@ const X = ({ className }: { className?: string }) => (
   </svg>
 );
 
+// ── Tipos ──────────────────────────────────────────────────────────────────────
 type EstadoTurno = "reservado" | "confirmado" | "cancelado" | "no_show" | "atendido";
 
 type Turno = {
@@ -72,28 +66,22 @@ type Turno = {
     documento?: string;
   } | null;
   profesionales?: { 
-    usuarios: { 
-      nombre: string; 
-      apellido: string;
-    };
-    profesiones?: {
-      nombre: string;
-    };
+    usuarios: { nombre: string; apellido: string };
+    profesiones?: { nombre: string };
   };
-  obras_sociales?: {
-    nombre: string;
-  } | null;
+  obras_sociales?: { nombre: string } | null;
 };
 
+// ⚠️ Alinear con lo que devuelve tu login: id, nombre (completo), email, rol, profesionalId
 type UserData = {
-  user_id: number;
-  nombre: string;
-  apellido: string;
+  id: number;
+  nombre: string;    // viene "Nombre Apellido" ya concatenado desde el login
   email: string;
-  rol: string;
-  profesional_id?: number;
+  rol: string;       // "Profesional" | ...
+  profesionalId?: number; // <-- camelCase como en tu payload
 };
 
+// ── Helpers ────────────────────────────────────────────────────────────────────
 function formatearFecha(fechaStr: string) {
   const fecha = new Date(`${fechaStr}T00:00:00`);
   return fecha.toLocaleDateString("es-AR", {
@@ -103,85 +91,75 @@ function formatearFecha(fechaStr: string) {
     year: "numeric",
   });
 }
-
 function formatearHora(fechaStr: string) {
   const fecha = new Date(fechaStr);
-  return fecha.toLocaleTimeString("es-AR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return fecha.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
 }
-
-// Función para obtener color según estado
 const getEstadoColor = (estado: EstadoTurno, ocupado: boolean) => {
   if (!ocupado) return "from-green-400 to-green-500";
-  
-  const colors: { [key: string]: string } = {
-    'confirmado': 'from-blue-400 to-blue-500',
-    'atendido': 'from-purple-400 to-purple-500',
-    'cancelado': 'from-red-400 to-red-500',
-    'no_show': 'from-gray-400 to-gray-500',
-    'reservado': 'from-yellow-400 to-yellow-500'
+  const colors: Record<string, string> = {
+    confirmado: "from-blue-400 to-blue-500",
+    atendido: "from-purple-400 to-purple-500",
+    cancelado: "from-red-400 to-red-500",
+    no_show: "from-gray-400 to-gray-500",
+    reservado: "from-yellow-400 to-yellow-500",
   };
-  return colors[estado] || 'from-orange-400 to-yellow-400';
+  return colors[estado] || "from-orange-400 to-yellow-400";
 };
-
 const getEstadoLabel = (estado: EstadoTurno) => {
-  const labels: { [key: string]: string } = {
-    'confirmado': 'Confirmado',
-    'atendido': 'Atendido',
-    'cancelado': 'Cancelado',
-    'no_show': 'No asistió',
-    'reservado': 'Reservado'
+  const labels: Record<string, string> = {
+    confirmado: "Confirmado",
+    atendido: "Atendido",
+    cancelado: "Cancelado",
+    no_show: "No asistió",
+    reservado: "Reservado",
   };
   return labels[estado] || estado;
 };
 
+// ── Componente ────────────────────────────────────────────────────────────────
 export default function AgendaDiariaPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Obtener datos del usuario desde localStorage
   const [userData, setUserData] = useState<UserData | null>(null);
-  
-  // Estados
   const [profesionalId, setProfesionalId] = useState<number | null>(null);
+
   const [fechaActual, setFechaActual] = useState<string>(() => {
     return searchParams.get("fecha") || new Date().toISOString().split("T")[0];
   });
   const [filtroTurno, setFiltroTurno] = useState<"todos" | "maniana" | "tarde">(
-    (searchParams.get("horario") as any) || "todos"
+    (searchParams.get("horario") as "todos" | "maniana" | "tarde") || "todos"
   );
   const [filtroEstado, setFiltroEstado] = useState<"todos" | "ocupados" | "libres">(
-    (searchParams.get("estado") as any) || "todos"
+    (searchParams.get("estado") as "todos" | "ocupados" | "libres") || "todos"
   );
 
   const [turnos, setTurnos] = useState<Turno[]>([]);
   const [turnoSeleccionado, setTurnoSeleccionado] = useState<Turno | null>(null);
   const [isLoadingTurnos, setIsLoadingTurnos] = useState(false);
 
-  // Cargar datos del usuario desde localStorage
+  // ▶️ Cargar usuario + profesionalId desde localStorage
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      const user = JSON.parse(storedUser) as UserData;
-      setUserData(user);
-      
-      // Si el usuario es un profesional, usar su ID
-      if (user.profesional_id) {
-        setProfesionalId(user.profesional_id);
-      }
+    const stored = localStorage.getItem("user");
+    if (!stored) return;
+
+    try {
+      const u = JSON.parse(stored) as UserData;
+      setUserData(u);
+      if (u.profesionalId) setProfesionalId(u.profesionalId); // <-- clave corregida
+    } catch {
+      // ignorar parse error
     }
   }, []);
 
-  // Cargar turnos del profesional + fecha
+  // ▶️ Traer turnos cuando haya profesionalId + fecha
   useEffect(() => {
     if (!profesionalId || !fechaActual) return;
 
     setIsLoadingTurnos(true);
-
     const qs = new URLSearchParams({
-      profesional_id: String(profesionalId),
+      profesional_id: String(profesionalId), // <-- param que espera tu API
       fecha: fechaActual,
     });
     if (filtroTurno !== "todos") qs.set("horario", filtroTurno);
@@ -189,38 +167,29 @@ export default function AgendaDiariaPage() {
 
     fetch(`/api/agendadiaria?${qs.toString()}`)
       .then((r) => r.json())
-      .then(setTurnos)
+      .then((data) => setTurnos(Array.isArray(data) ? data : []))
       .finally(() => setIsLoadingTurnos(false));
-  }, [
-    profesionalId,   // 1
-    fechaActual,     // 2
-    filtroTurno,     // 3  <- SIEMPRE incluido
-    filtroEstado,    // 4  <- SIEMPRE incluido
-  ]);
+  }, [profesionalId, fechaActual, filtroTurno, filtroEstado]);
 
-  // Sincronizar URL cuando cambien los filtros clave
+  // ▶️ Reflejar filtros en la URL
   useEffect(() => {
     const params = new URLSearchParams();
-    if (profesionalId) params.set("profesional_id", profesionalId.toString());
+    if (profesionalId) params.set("profesional_id", String(profesionalId));
     if (fechaActual) params.set("fecha", fechaActual);
-    if (filtroTurno && filtroTurno !== "todos") params.set("horario", filtroTurno);
-    if (filtroEstado && filtroEstado !== "todos") params.set("estado", filtroEstado);
+    if (filtroTurno !== "todos") params.set("horario", filtroTurno);
+    if (filtroEstado !== "todos") params.set("estado", filtroEstado);
     router.replace(`?${params.toString()}`);
   }, [profesionalId, fechaActual, filtroTurno, filtroEstado, router]);
 
-  // Cambiar día con botones
+  // Helpers UI
   const cambiarDia = (dias: number) => {
     const fecha = new Date(`${fechaActual}T00:00:00`);
     fecha.setDate(fecha.getDate() + dias);
     setFechaActual(fecha.toISOString().split("T")[0]);
   };
+  const irAHoy = () => setFechaActual(new Date().toISOString().split("T")[0]);
 
-  // Ir a hoy
-  const irAHoy = () => {
-    setFechaActual(new Date().toISOString().split("T")[0]);
-  };
-
-  // Aplicar filtros a los turnos
+  // Filtros en cliente (horario/estado)
   let turnosFiltrados = [...turnos];
   if (filtroTurno === "maniana") {
     turnosFiltrados = turnosFiltrados.filter((t) => {
@@ -239,30 +208,37 @@ export default function AgendaDiariaPage() {
     turnosFiltrados = turnosFiltrados.filter((t) => !t.pacientes);
   }
 
-  // Calcular estadísticas
   const totalTurnos = turnosFiltrados.length;
-  const turnosOcupados = turnosFiltrados.filter(t => t.pacientes).length;
+  const turnosOcupados = turnosFiltrados.filter((t) => t.pacientes).length;
   const turnosLibres = totalTurnos - turnosOcupados;
 
   return (
     <main className="p-6 min-h-screen bg-gray-50">
-      {/* Header con info del profesional */}
+      {/* Header */}
       <div className="mb-6 bg-white rounded-xl p-4 shadow-sm border border-gray-200">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">
-              Agenda Diaria
-            </h1>
-            {userData && (
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Agenda Diaria</h1>
+            {userData ? (
               <p className="text-gray-600 flex items-center gap-2">
                 <User className="w-5 h-5 text-orange-400" />
-                <span className="font-semibold">Dr. {userData.apellido} {userData.nombre}</span>
-                {userData.rol && <span className="text-sm bg-orange-100 text-orange-600 px-2 py-1 rounded-full ml-2">{userData.rol}</span>}
+                {/* Si querés mostrar Apellido, Nombre lo podés partir, pero tu login trae nombre completo */}
+                <span className="font-semibold">{userData.nombre}</span>
+                {userData.rol && (
+                  <span className="text-sm bg-orange-100 text-orange-600 px-2 py-1 rounded-full ml-2">
+                    {userData.rol}
+                  </span>
+                )}
+                {userData.rol?.toLowerCase() === "profesional" && !userData.profesionalId && (
+                  <span className="text-xs text-red-500 ml-2">
+                    (faltó profesionalId en el login)
+                  </span>
+                )}
               </p>
+            ) : (
+              <p className="text-gray-500">Cargando usuario…</p>
             )}
           </div>
-          
-          {/* Botón Hoy */}
           <button
             onClick={irAHoy}
             className="px-4 py-2 bg-gradient-to-r from-orange-400 to-yellow-400 text-white rounded-lg 
@@ -274,9 +250,8 @@ export default function AgendaDiariaPage() {
         </div>
       </div>
 
-      {/* Contenedor principal */}
       <div className="max-w-6xl mx-auto">
-        {/* Navegación de fechas */}
+        {/* Navegación fechas */}
         <div className="bg-white rounded-xl p-6 shadow-md mb-6 border border-gray-200">
           <div className="flex items-center justify-between gap-4">
             <button
@@ -306,15 +281,14 @@ export default function AgendaDiariaPage() {
           </div>
         </div>
 
-        {/* Filtros y estadísticas */}
+        {/* Filtros + stats */}
         <div className="bg-white rounded-xl p-6 shadow-md mb-6 border border-gray-200">
           <div className="flex items-center gap-2 mb-4">
             <Filter className="w-5 h-5 text-orange-400" />
             <h3 className="font-semibold text-gray-700">Filtros</h3>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            {/* Calendario */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-orange-400" />
@@ -329,7 +303,6 @@ export default function AgendaDiariaPage() {
               />
             </div>
 
-            {/* Horario */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                 <Clock className="w-4 h-4 text-orange-400" />
@@ -337,7 +310,7 @@ export default function AgendaDiariaPage() {
               </label>
               <select
                 value={filtroTurno}
-                onChange={(e) => setFiltroTurno(e.target.value as any)}
+                onChange={(e) => setFiltroTurno(e.target.value as "todos" | "maniana" | "tarde")}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 
                          focus:ring-orange-400 focus:border-transparent transition-all duration-200"
               >
@@ -347,7 +320,6 @@ export default function AgendaDiariaPage() {
               </select>
             </div>
 
-            {/* Estado */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-orange-400" />
@@ -355,7 +327,7 @@ export default function AgendaDiariaPage() {
               </label>
               <select
                 value={filtroEstado}
-                onChange={(e) => setFiltroEstado(e.target.value as any)}
+                onChange={(e) => setFiltroEstado(e.target.value as "todos" | "ocupados" | "libres")}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 
                          focus:ring-orange-400 focus:border-transparent transition-all duration-200"
               >
@@ -366,8 +338,7 @@ export default function AgendaDiariaPage() {
             </div>
           </div>
 
-          {/* Estadísticas */}
-          <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200">
+          <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-2 00">
             <div className="text-center">
               <p className="text-2xl font-bold text-gray-800">{totalTurnos}</p>
               <p className="text-sm text-gray-600">Total turnos</p>
@@ -390,7 +361,11 @@ export default function AgendaDiariaPage() {
             Turnos del día
           </h3>
 
-          {isLoadingTurnos ? (
+          {!profesionalId ? (
+            <div className="text-center py-12 text-gray-500">
+              No se detectó <span className="font-semibold">profesionalId</span>. Volvé a iniciar sesión como profesional.
+            </div>
+          ) : isLoadingTurnos ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-400 mx-auto mb-4"></div>
@@ -403,12 +378,14 @@ export default function AgendaDiariaPage() {
                 turnosFiltrados.map((turno) => {
                   const ocupado = !!turno.pacientes;
                   const colorGradient = getEstadoColor(turno.estado, ocupado);
-                  const horaFin = turno.fin || (() => {
-                    const inicio = new Date(turno.inicio);
-                    inicio.setMinutes(inicio.getMinutes() + 30);
-                    return inicio.toISOString();
-                  })();
-                  
+                  const horaFin =
+                    turno.fin ||
+                    (() => {
+                      const inicio = new Date(turno.inicio);
+                      inicio.setMinutes(inicio.getMinutes() + 30);
+                      return inicio.toISOString();
+                    })();
+
                   return (
                     <div
                       key={turno.turno_id}
@@ -432,24 +409,18 @@ export default function AgendaDiariaPage() {
                                   {turno.pacientes?.apellido}, {turno.pacientes?.nombre}
                                 </p>
                                 {turno.pacientes?.documento && (
-                                  <p className="text-sm opacity-90">
-                                    DNI: {turno.pacientes.documento}
-                                  </p>
+                                  <p className="text-sm opacity-90">DNI: {turno.pacientes.documento}</p>
                                 )}
                                 {turno.obras_sociales && (
-                                  <p className="text-sm opacity-90">
-                                    {turno.obras_sociales.nombre}
-                                  </p>
+                                  <p className="text-sm opacity-90">{turno.obras_sociales.nombre}</p>
                                 )}
                               </div>
                             ) : (
-                              <p className="font-medium opacity-90">
-                                Turno disponible
-                              </p>
+                              <p className="font-medium opacity-90">Turno disponible</p>
                             )}
                           </div>
                         </div>
-                        
+
                         {ocupado && (
                           <div className="text-right">
                             <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-sm font-medium">
@@ -464,12 +435,8 @@ export default function AgendaDiariaPage() {
               ) : (
                 <div className="text-center py-12">
                   <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500 text-lg">
-                    No hay turnos programados para esta fecha
-                  </p>
-                  <p className="text-gray-400 text-sm mt-2">
-                    Intenta seleccionar otra fecha o ajustar los filtros
-                  </p>
+                  <p className="text-gray-500 text-lg">No hay turnos programados para esta fecha</p>
+                  <p className="text-gray-400 text-sm mt-2">Probá con otra fecha o ajustá los filtros</p>
                 </div>
               )}
             </div>
@@ -477,15 +444,12 @@ export default function AgendaDiariaPage() {
         </div>
       </div>
 
-      {/* Modal de detalle */}
+      {/* Modal */}
       {turnoSeleccionado && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
-            {/* Header del modal */}
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-gray-800">
-                Detalle del Turno
-              </h3>
+              <h3 className="text-2xl font-bold text-gray-800">Detalle del Turno</h3>
               <button
                 onClick={() => setTurnoSeleccionado(null)}
                 className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
@@ -494,7 +458,6 @@ export default function AgendaDiariaPage() {
               </button>
             </div>
 
-            {/* Contenido del modal */}
             <div className="space-y-4">
               <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg p-4">
                 <p className="text-sm text-gray-600 mb-1">Horario</p>
@@ -531,14 +494,6 @@ export default function AgendaDiariaPage() {
                 </div>
               )}
 
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Estado</p>
-                <span className={`inline-block px-3 py-1 rounded-full text-white text-sm font-medium
-                              bg-gradient-to-r ${getEstadoColor(turnoSeleccionado.estado, !!turnoSeleccionado.pacientes)}`}>
-                  {getEstadoLabel(turnoSeleccionado.estado)}
-                </span>
-              </div>
-
               {turnoSeleccionado.profesionales && (
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Profesional</p>
@@ -553,9 +508,21 @@ export default function AgendaDiariaPage() {
                   )}
                 </div>
               )}
+
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Estado</p>
+                <span
+                  className={`inline-block px-3 py-1 rounded-full text-white text-sm font-medium
+                              bg-gradient-to-r ${getEstadoColor(
+                                turnoSeleccionado.estado,
+                                !!turnoSeleccionado.pacientes
+                              )}`}
+                >
+                  {getEstadoLabel(turnoSeleccionado.estado)}
+                </span>
+              </div>
             </div>
 
-            {/* Botón cerrar */}
             <div className="mt-6">
               <button
                 onClick={() => setTurnoSeleccionado(null)}

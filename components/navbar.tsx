@@ -137,7 +137,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSectionChange, activeSection }) => {
         <div className="p-4 border-t border-gray-200">
           <button className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-orange-600 rounded-lg transition-all duration-200">
             <LogIn className="w-5 h-5 mr-3" />
-            <span className="font-medium">Login</span>
+            <span className="font-medium">Log out</span>
           </button>
         </div>
       </div>
@@ -192,7 +192,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSectionChange, activeSection }) => {
               <div className="pt-4 border-t border-gray-200">
                 <button className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-orange-600 rounded-lg transition-all duration-200">
                   <LogIn className="w-5 h-5 mr-3" />
-                  <span className="font-medium">Login</span>
+                  <span className="font-medium">Log out</span>
                 </button>
               </div>
             </nav>
