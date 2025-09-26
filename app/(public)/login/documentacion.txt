@@ -1,0 +1,4 @@
+instalar para que funcione el login
+
+npm install bcryptjs
+npm install --save-dev @types/bcryptjs
