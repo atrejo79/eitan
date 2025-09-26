@@ -79,8 +79,8 @@ const Navbar: React.FC<NavbarProps> = ({ onSectionChange, activeSection }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const menuItems = [
-    { id: 'turnos', label: 'Turnos', icon: Calendar },
-    { id: 'pacientes', label: 'Pacientes', icon: Users },
+    { href: '../app/(recepcion)/turnos', id: 'turnos', label: 'Turnos', icon: Calendar },
+    { href: '../app/(pacientes)/pacientes', id: 'pacientes', label: 'Pacientes', icon: Users },
     { id: 'historial', label: 'Historial Médico', icon: FileText },
     { id: 'profesionales', label: 'Profesionales', icon: UserCheck },
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },

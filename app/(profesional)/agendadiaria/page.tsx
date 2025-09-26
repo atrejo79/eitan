@@ -176,23 +176,27 @@ export default function AgendaDiariaPage() {
 
   // Cargar turnos del profesional + fecha
   useEffect(() => {
-  if (!profesionalId || !fechaActual) return;
+    if (!profesionalId || !fechaActual) return;
 
-  setIsLoadingTurnos(true);
+    setIsLoadingTurnos(true);
 
-  const qs = new URLSearchParams({
-    profesional_id: String(profesionalId),
-    fecha: fechaActual,
-  });
+    const qs = new URLSearchParams({
+      profesional_id: String(profesionalId),
+      fecha: fechaActual,
+    });
+    if (filtroTurno !== "todos") qs.set("horario", filtroTurno);
+    if (filtroEstado !== "todos") qs.set("estado", filtroEstado);
 
-  if (filtroTurno !== "todos") qs.set("horario", filtroTurno); // maniana | tarde
-  if (filtroEstado !== "todos") qs.set("estado", filtroEstado); // ocupados | libres
-
-  fetch(`/api/agendadiaria?${qs.toString()}`)
-    .then((res) => res.json())
-    .then((data) => setTurnos(data))
-    .finally(() => setIsLoadingTurnos(false));
-  }, [profesionalId, fechaActual, filtroTurno, filtroEstado]);
+    fetch(`/api/agendadiaria?${qs.toString()}`)
+      .then((r) => r.json())
+      .then(setTurnos)
+      .finally(() => setIsLoadingTurnos(false));
+  }, [
+    profesionalId,   // 1
+    fechaActual,     // 2
+    filtroTurno,     // 3  <- SIEMPRE incluido
+    filtroEstado,    // 4  <- SIEMPRE incluido
+  ]);
 
   // Sincronizar URL cuando cambien los filtros clave
   useEffect(() => {
