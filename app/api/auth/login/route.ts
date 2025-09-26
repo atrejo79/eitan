@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     if (roleName === 'recepcion') {
       redirectPath = '/turnos';  // 👈 Cambiar aquí para recepción
     } else if (roleName === 'profesional') {
-      redirectPath = '/turnos';    // 👈 Cambiar aquí para profesional
+      redirectPath = '/agendadiaria';    // 👈 Cambiar aquí para profesional
     } else {
       redirectPath = '/dashboard';      // 👈 Ruta por defecto
     }
