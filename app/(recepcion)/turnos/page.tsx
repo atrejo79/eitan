@@ -160,15 +160,18 @@ function SearchableCombo({
     );
   }, [open, filtered.length]);
 
-  const commitChoice = (idx: number) => {
-    const item = filtered[idx];
-    if (!item) return;
-    onChange(item.value);
-    setOpen(false);
-    setQuery("");
-    requestAnimationFrame(() => inputRef.current?.focus());
-  };
-
+  function commitChoice(idx: number) {
+  const item = filtered[idx];
+  if (!item) return;
+  onChange(item.value);
+  // mostrar inmediatamente el label elegido
+  setQuery(item.label);
+  // cerrar y sacar el foco para que no se reabra
+  setOpen(false);
+  requestAnimationFrame(() => {
+    inputRef.current?.blur();
+  });
+}
   return (
     <div ref={rootRef} className="relative">
       <div
