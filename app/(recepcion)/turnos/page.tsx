@@ -230,9 +230,9 @@ export default function TurnosPage() {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">
-          Gestión de Turnos
+          Calendario de turnos
         </h1>
-        <p className="text-gray-600">Administra los turnos médicos del consultorio</p>
+        <p className="text-gray-600">Visualizacion de los turnos médicos del consultorio</p>
       </div>
 
       {/* Botón agregar turno */}

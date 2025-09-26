@@ -2,10 +2,12 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
-// ====== Íconos (mismos que usás) ======
-const Calendar = ({ className }: { className?: string }) => (
+// ====== Íconos ======
+type IconProps = { className?: string };
+
+const Calendar = ({ className }: IconProps) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
     <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -14,7 +16,7 @@ const Calendar = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const Users = ({ className }: { className?: string }) => (
+const Users = ({ className }: IconProps) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
     <circle cx="9" cy="7" r="4"></circle>
@@ -23,7 +25,7 @@ const Users = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const FileText = ({ className }: { className?: string }) => (
+const FileText = ({ className }: IconProps) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
     <polyline points="14,2 14,8 20,8"></polyline>
@@ -33,7 +35,7 @@ const FileText = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const UserCheck = ({ className }: { className?: string }) => (
+const UserCheck = ({ className }: IconProps) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
     <circle cx="8.5" cy="7" r="4"></circle>
@@ -41,7 +43,7 @@ const UserCheck = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const BarChart3 = ({ className }: { className?: string }) => (
+const BarChart3 = ({ className }: IconProps) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <line x1="12" y1="20" x2="12" y2="10"></line>
     <line x1="18" y1="20" x2="18" y2="4"></line>
@@ -49,7 +51,7 @@ const BarChart3 = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const LogIn = ({ className }: { className?: string }) => (
+const LogIn = ({ className }: IconProps) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
     <polyline points="10,17 15,12 10,7"></polyline>
@@ -57,7 +59,7 @@ const LogIn = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const Menu = ({ className }: { className?: string }) => (
+const Menu = ({ className }: IconProps) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <line x1="3" y1="6" x2="21" y2="6"></line>
     <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -65,7 +67,7 @@ const Menu = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const X = ({ className }: { className?: string }) => (
+const X = ({ className }: IconProps) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <line x1="18" y1="6" x2="6" y2="18"></line>
     <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -74,36 +76,58 @@ const X = ({ className }: { className?: string }) => (
 
 // ===============================================================
 
+type ItemProps = {
+  href: string;
+  label: string;
+  Icon: React.ComponentType<IconProps>;
+  closeMenu: () => void;
+};
+
 export default function NavbarProfesional() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+
+  const loginHref = '/login'; // ruta login base
 
   const items = [
-    { href: '/profesional/agenda', label: 'Agenda', icon: Calendar },
-    { href: '/profesional/turnos', label: 'Mis Turnos', icon: Calendar },
+    { href: '/profesional/agenda', label: 'Mi Agenda', icon: Calendar },
     { href: '/profesional/pacientes', label: 'Mis Pacientes', icon: Users },
     { href: '/profesional/historias', label: 'Historias Clínicas', icon: FileText },
-    { href: '/profesional/notificaciones', label: 'Notificaciones', icon: UserCheck },
     { href: '/profesional/perfil', label: 'Mi Perfil', icon: BarChart3 },
-  ];
+  ] as const;
 
-  const Item = ({ href, label, Icon }: any) => {
-    const active = pathname === href || pathname.startsWith(href + '/');
-    return (
-      <Link
-        href={href}
-        className={`w-full flex items-center px-4 py-3 rounded-lg transition-all duration-200 ${
-          active
-            ? 'bg-gradient-to-r from-orange-400 to-yellow-400 text-white shadow-md'
-            : 'text-gray-700 hover:bg-gray-100 hover:text-orange-600'
-        }`}
-        onClick={() => setIsMobileMenuOpen(false)}
-      >
-        <Icon className="w-5 h-5 mr-3" />
-        <span className="font-medium">{label}</span>
-      </Link>
-    );
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
+
+  const itemClasses = (active: boolean) =>
+    `w-full flex items-center px-4 py-3 rounded-lg transition-all duration-200 ${
+      active
+        ? 'bg-gradient-to-r from-orange-400 to-yellow-400 text-white shadow-md'
+        : 'text-gray-700 hover:bg-gray-100 hover:text-orange-600'
+    }`;
+
+  const handleLogout = () => {
+    try {
+      localStorage.clear();
+      // sessionStorage.clear(); // si lo usás
+      // document.cookie = 'token=; Max-Age=0; path=/'; // si tenés cookie de cliente
+    } finally {
+      setIsMobileMenuOpen(false);
+      router.push(loginHref);
+    }
   };
+
+  const Item = ({ href, label, Icon, closeMenu }: ItemProps) => (
+    <Link
+      href={href}
+      className={itemClasses(isActive(href))}
+      onClick={closeMenu}
+      aria-current={isActive(href) ? 'page' : undefined}
+    >
+      <Icon className="w-5 h-5 mr-3" />
+      <span className="font-medium">{label}</span>
+    </Link>
+  );
 
   return (
     <>
@@ -119,18 +143,20 @@ export default function NavbarProfesional() {
 
         <nav className="flex-1 px-4 py-6 space-y-2">
           {items.map(({ href, label, icon: Icon }) => (
-            <Item key={href} href={href} label={label} Icon={Icon} />
+            <Item key={href} href={href} label={label} Icon={Icon} closeMenu={() => {}} />
           ))}
         </nav>
 
+        {/* Solo Logout */}
         <div className="p-4 border-t border-gray-200">
-          <Link
-            href="/login"
+          <button
+            type="button"
+            onClick={handleLogout}
             className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-orange-600 rounded-lg transition-all duration-200"
           >
-            <LogIn className="w-5 h-5 mr-3" />
-            <span className="font-medium">Login</span>
-          </Link>
+            <LogIn className="w-5 h-5 mr-3 rotate-180" />
+            <span className="font-medium">Log out</span>
+          </button>
         </div>
       </div>
 
@@ -142,7 +168,7 @@ export default function NavbarProfesional() {
             <img src="/images/eitan-text.png" alt="EiTAN Salta" className="h-5 object-contain" />
           </div>
           <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            onClick={() => setIsMobileMenuOpen((v) => !v)}
             className="p-2 rounded-md text-gray-600 hover:text-orange-600 hover:bg-gray-100"
           >
             {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -156,16 +182,24 @@ export default function NavbarProfesional() {
           <div className="fixed left-0 top-16 bottom-0 w-64 bg-white shadow-lg" onClick={(e) => e.stopPropagation()}>
             <nav className="p-4 space-y-2">
               {items.map(({ href, label, icon: Icon }) => (
-                <Item key={href} href={href} label={label} Icon={Icon} />
+                <Item
+                  key={href}
+                  href={href}
+                  label={label}
+                  Icon={Icon}
+                  closeMenu={() => setIsMobileMenuOpen(false)}
+                />
               ))}
+
               <div className="pt-4 border-t border-gray-200">
-                <Link
-                  href="/login"
+                <button
+                  type="button"
+                  onClick={handleLogout}
                   className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-orange-600 rounded-lg transition-all duration-200"
                 >
-                  <LogIn className="w-5 h-5 mr-3" />
-                  <span className="font-medium">Login</span>
-                </Link>
+                  <LogIn className="w-5 h-5 mr-3 rotate-180" />
+                  <span className="font-medium">Log out</span>
+                </button>
               </div>
             </nav>
           </div>

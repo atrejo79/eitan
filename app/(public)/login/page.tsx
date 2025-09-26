@@ -108,7 +108,7 @@ export default function LoginPage() {
             alt="EiTAN Salta" 
             className="h-10 object-contain mx-auto mb-2"
           />
-          <p className="text-gray-500 text-sm font-medium">Sistema de Gestión Médica</p>
+          <p className="text-gray-500 text-sm font-medium">Ingreso Equipo Medico</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">

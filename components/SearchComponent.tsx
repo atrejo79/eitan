@@ -52,27 +52,11 @@ const Shield = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const UserPlus = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-    <circle cx="8.5" cy="7" r="4"></circle>
-    <line x1="20" y1="6" x2="20" y2="12"></line>
-    <line x1="17" y1="9" x2="23" y2="9"></line>
-  </svg>
-);
-
 const AlertCircle = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <circle cx="12" cy="12" r="10"></circle>
     <line x1="12" y1="8" x2="12" y2="12"></line>
     <line x1="12" y1="16" x2="12.01" y2="16"></line>
-  </svg>
-);
-
-const CheckCircle = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-    <polyline points="22,4 12,14.01 9,11.01"></polyline>
   </svg>
 );
 
@@ -94,6 +78,9 @@ type Paciente = {
   telefono?: string;
   fecha_nacimiento?: string;
   obra_social_id?: number;
+  obras_sociales?: {
+    nombre: string;
+  };
 };
 
 export default function SearchComponent() {
@@ -101,19 +88,8 @@ export default function SearchComponent() {
   const [busquedaValor, setBusquedaValor] = useState("");
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [loading, setLoading] = useState(false);
-  const [showForm, setShowForm] = useState(false);
-  const [askCreate, setAskCreate] = useState(false);
   const [selectedPaciente, setSelectedPaciente] = useState<Paciente | null>(null);
-
-  const [nuevo, setNuevo] = useState<Omit<Paciente, "id">>({
-    nombre: "",
-    apellido: "",
-    documento: "",
-    email: "",
-    telefono: "",
-    fecha_nacimiento: "",
-    obra_social_id: undefined,
-  });
+  const [notFound, setNotFound] = useState(false);
 
   const upperFirst = (str: string) =>
     str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
@@ -125,9 +101,12 @@ export default function SearchComponent() {
     }
 
     // Validaciones según tipo de búsqueda
-    if (busquedaTipo === "documento" && !/^\d{7,8}$/.test(busquedaValor)) {
-      alert("El documento debe tener 7 u 8 dígitos.");
-      return;
+    if (busquedaTipo === "documento") {
+      const documentoLimpio = busquedaValor.replace(/\D/g, '');
+      if (documentoLimpio.length < 7 || documentoLimpio.length > 8) {
+        alert("El documento debe tener entre 7 y 8 dígitos.");
+        return;
+      }
     }
 
     if (busquedaTipo === "apellido") {
@@ -138,110 +117,48 @@ export default function SearchComponent() {
     }
 
     setLoading(true);
+    setNotFound(false);
+    
     try {
       const query = busquedaTipo === "documento"
-        ? `documento=${busquedaValor}`
+        ? `documento=${busquedaValor.replace(/\D/g, '')}`
         : `apellido=${busquedaValor}`;
+      
       const res = await fetch(`/api/buscar-pacientes?${query}`);
       const data: Paciente[] = await res.json();
+      
       setPacientes(data);
 
       if (data.length === 0) {
-        setAskCreate(true);
-        setShowForm(false);
+        setNotFound(true);
         setSelectedPaciente(null);
       } else if (data.length === 1) {
         setSelectedPaciente(data[0]);
-        setShowForm(false);
-        setAskCreate(false);
       } else {
         setSelectedPaciente(null);
-        setShowForm(false);
-        setAskCreate(false);
       }
     } catch (error) {
       console.error("Error en búsqueda:", error);
-      alert("Error al realizar la búsqueda.");
+      alert("Error al realizar la búsqueda. Por favor, intente nuevamente.");
     } finally {
       setLoading(false);
     }
-  };
-
-  const crearPaciente = async () => {
-    // Validaciones frontend
-    if (!nuevo.nombre.match(/^[A-Za-zÁÉÍÓÚáéíóúñÑ ]+$/)) {
-      alert("El nombre solo debe contener letras.");
-      return;
-    }
-    if (!nuevo.apellido.match(/^[A-Za-zÁÉÍÓÚáéíóúñÑ ]+$/)) {
-      alert("El apellido solo debe contener letras.");
-      return;
-    }
-    if (!nuevo.documento.match(/^[0-9]{7,8}$/)) {
-      alert("El documento debe tener 7 u 8 dígitos.");
-      return;
-    }
-    if (nuevo.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nuevo.email)) {
-      alert("Ingrese un email válido.");
-      return;
-    }
-    if (nuevo.telefono && !/^\+?\d{7,15}$/.test(nuevo.telefono)) {
-      alert("Ingrese un teléfono válido (7-15 dígitos).");
-      return;
-    }
-
-    const pacienteParaCrear = {
-      ...nuevo,
-      nombre: upperFirst(nuevo.nombre),
-      apellido: upperFirst(nuevo.apellido),
-    };
-
-    try {
-      const res = await fetch("/api/buscar-pacientes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(pacienteParaCrear),
-      });
-
-      if (res.ok) {
-        alert("Paciente creado exitosamente.");
-        setShowForm(false);
-        setAskCreate(false);
-        setNuevo({
-          nombre: "",
-          apellido: "",
-          documento: "",
-          email: "",
-          telefono: "",
-          fecha_nacimiento: "",
-          obra_social_id: undefined,
-        });
-        // Buscar de nuevo para mostrar el paciente creado
-        await buscarPacientes();
-      } else {
-        const err = await res.json();
-        alert("Error al crear paciente: " + err.error);
-      }
-    } catch (error) {
-      console.error("Error al crear paciente:", error);
-      alert("Error al crear paciente.");
-    }
-  };
-
-  const handleCreateYes = () => {
-    setShowForm(true);
-    setAskCreate(false);
-    setNuevo((prev) => ({
-      ...prev,
-      documento: busquedaTipo === "documento" ? busquedaValor : prev.documento,
-      apellido: busquedaTipo === "apellido" ? busquedaValor : prev.apellido,
-    }));
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       buscarPacientes();
     }
+  };
+
+  const formatearFecha = (fecha?: string) => {
+    if (!fecha) return "-";
+    const date = new Date(fecha);
+    return date.toLocaleDateString('es-AR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
   };
 
   return (
@@ -253,74 +170,91 @@ export default function SearchComponent() {
         </div>
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Buscar Paciente</h2>
-          <p className="text-sm text-gray-600">Busque o registre nuevos pacientes</p>
+          <p className="text-sm text-gray-600">Encuentre rápidamente la información del paciente</p>
         </div>
       </div>
 
       {/* Buscador */}
       <div className="space-y-4 mb-6">
         {/* Tipo de búsqueda */}
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={() => setBusquedaTipo("documento")}
-            className={`px-4 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2
-              ${busquedaTipo === "documento" 
-                ? 'bg-gradient-to-r from-orange-400 to-yellow-400 text-white shadow-md' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-          >
-            <CreditCard className="w-5 h-5" />
-            Documento
-          </button>
-          <button
-            onClick={() => setBusquedaTipo("apellido")}
-            className={`px-4 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2
-              ${busquedaTipo === "apellido" 
-                ? 'bg-gradient-to-r from-orange-400 to-yellow-400 text-white shadow-md' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-          >
-            <User className="w-5 h-5" />
-            Apellido
-          </button>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Buscar por:
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => setBusquedaTipo("documento")}
+              className={`px-4 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2
+                ${busquedaTipo === "documento" 
+                  ? 'bg-gradient-to-r from-orange-400 to-yellow-400 text-white shadow-md transform scale-105' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            >
+              <CreditCard className="w-5 h-5" />
+              Documento
+            </button>
+            <button
+              onClick={() => setBusquedaTipo("apellido")}
+              className={`px-4 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2
+                ${busquedaTipo === "apellido" 
+                  ? 'bg-gradient-to-r from-orange-400 to-yellow-400 text-white shadow-md transform scale-105' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            >
+              <User className="w-5 h-5" />
+              Apellido
+            </button>
+          </div>
         </div>
 
         {/* Campo de búsqueda */}
-        <div className="flex gap-3">
-          <input
-            type="text"
-            value={busquedaValor}
-            onChange={(e) => setBusquedaValor(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder={busquedaTipo === "documento" ? "Ej: 12345678" : "Ej: García"}
-            className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 
-                     focus:ring-orange-400 focus:border-transparent transition-all duration-200"
-          />
-          <button
-            onClick={buscarPacientes}
-            disabled={loading}
-            className="px-6 py-3 bg-gradient-to-r from-orange-400 to-yellow-400 text-white rounded-lg 
-                     hover:from-orange-500 hover:to-yellow-500 shadow-md transform transition-all 
-                     duration-200 hover:scale-[1.02] active:scale-[0.98] font-semibold disabled:opacity-50"
-          >
-            {loading ? (
-              <>
-                <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white inline-block"></span>
-              </>
-            ) : (
-              <>
-                <Search className="w-5 h-5 inline mr-2" />
-                Buscar
-              </>
-            )}
-          </button>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            {busquedaTipo === "documento" ? "Número de Documento" : "Apellido del Paciente"}
+          </label>
+          <div className="flex gap-3">
+            <input
+              type="text"
+              value={busquedaValor}
+              onChange={(e) => setBusquedaValor(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder={
+                busquedaTipo === "documento" 
+                  ? "Ej: 12345678" 
+                  : "Ej: García"
+              }
+              className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 
+                       focus:ring-orange-400 focus:border-transparent transition-all duration-200"
+            />
+            <button
+              onClick={buscarPacientes}
+              disabled={loading}
+              className="px-6 py-3 bg-gradient-to-r from-orange-400 to-yellow-400 text-white rounded-lg 
+                       hover:from-orange-500 hover:to-yellow-500 shadow-md transform transition-all 
+                       duration-200 hover:scale-[1.02] active:scale-[0.98] font-semibold 
+                       disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
+                  Buscando...
+                </>
+              ) : (
+                <>
+                  <Search className="w-5 h-5" />
+                  Buscar
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Resultados - Múltiples pacientes */}
+      {/* Resultados */}
+      {/* Si hay varios pacientes */}
       {pacientes.length > 1 && !selectedPaciente && (
         <div className="mb-6">
-          <p className="text-sm font-medium text-gray-700 mb-3">
+          <label className="block text-sm font-medium text-gray-700 mb-3">
             Se encontraron {pacientes.length} pacientes:
-          </p>
+          </label>
           <div className="space-y-2">
             {pacientes.map((p) => (
               <button
@@ -328,28 +262,32 @@ export default function SearchComponent() {
                 onClick={() => setSelectedPaciente(p)}
                 className="w-full p-4 bg-gray-50 hover:bg-gradient-to-r hover:from-orange-50 hover:to-yellow-50 
                          border border-gray-200 hover:border-orange-300 rounded-lg transition-all duration-200 
-                         text-left flex items-center justify-between group"
+                         text-left group"
               >
-                <div className="flex items-center gap-3">
-                  <User className="w-5 h-5 text-gray-600 group-hover:text-orange-500" />
-                  <div>
-                    <p className="font-semibold text-gray-800">
-                      {upperFirst(p.apellido)}, {upperFirst(p.nombre)}
-                    </p>
-                    <p className="text-sm text-gray-600">DNI: {p.documento}</p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white rounded-lg group-hover:bg-orange-100 transition-colors">
+                      <User className="w-5 h-5 text-gray-600 group-hover:text-orange-500" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-800">
+                        {upperFirst(p.apellido)}, {upperFirst(p.nombre)}
+                      </p>
+                      <p className="text-sm text-gray-600">DNI: {p.documento}</p>
+                    </div>
                   </div>
+                  <svg className="w-5 h-5 text-gray-400 group-hover:text-orange-500 transition-colors" 
+                       fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <polyline points="9,18 15,12 9,6"></polyline>
+                  </svg>
                 </div>
-                <svg className="w-5 h-5 text-gray-400 group-hover:text-orange-500" 
-                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <polyline points="9,18 15,12 9,6"></polyline>
-                </svg>
               </button>
             ))}
           </div>
         </div>
       )}
 
-      {/* Paciente seleccionado */}
+      {/* Paciente seleccionado o único resultado */}
       {selectedPaciente && (
         <div className="bg-gradient-to-br from-orange-50 to-yellow-50 rounded-xl p-6 border border-orange-200">
           <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -358,160 +296,94 @@ export default function SearchComponent() {
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <p className="text-sm"><span className="font-semibold">Nombre:</span> {upperFirst(selectedPaciente.nombre)}</p>
-              <p className="text-sm"><span className="font-semibold">Apellido:</span> {upperFirst(selectedPaciente.apellido)}</p>
-              <p className="text-sm"><span className="font-semibold">Documento:</span> {selectedPaciente.documento}</p>
-              <p className="text-sm"><span className="font-semibold">Fecha Nac.:</span> {selectedPaciente.fecha_nacimiento || "-"}</p>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <User className="w-4 h-4 text-orange-400" />
+                <div>
+                  <p className="text-xs text-gray-600">Nombre Completo</p>
+                  <p className="font-semibold text-gray-800">
+                    {upperFirst(selectedPaciente.apellido)}, {upperFirst(selectedPaciente.nombre)}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <CreditCard className="w-4 h-4 text-orange-400" />
+                <div>
+                  <p className="text-xs text-gray-600">Documento</p>
+                  <p className="font-semibold text-gray-800">{selectedPaciente.documento}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <Calendar className="w-4 h-4 text-orange-400" />
+                <div>
+                  <p className="text-xs text-gray-600">Fecha de Nacimiento</p>
+                  <p className="font-semibold text-gray-800">
+                    {formatearFecha(selectedPaciente.fecha_nacimiento)}
+                  </p>
+                </div>
+              </div>
             </div>
-            <div className="space-y-2">
-              <p className="text-sm"><span className="font-semibold">Email:</span> {selectedPaciente.email || "-"}</p>
-              <p className="text-sm"><span className="font-semibold">Teléfono:</span> {selectedPaciente.telefono || "-"}</p>
-              <p className="text-sm"><span className="font-semibold">Obra Social ID:</span> {selectedPaciente.obra_social_id || "-"}</p>
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <Mail className="w-4 h-4 text-orange-400" />
+                <div>
+                  <p className="text-xs text-gray-600">Email</p>
+                  <p className="font-semibold text-gray-800">
+                    {selectedPaciente.email || "-"}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <Phone className="w-4 h-4 text-orange-400" />
+                <div>
+                  <p className="text-xs text-gray-600">Teléfono</p>
+                  <p className="font-semibold text-gray-800">
+                    {selectedPaciente.telefono || "-"}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <Shield className="w-4 h-4 text-orange-400" />
+                <div>
+                  <p className="text-xs text-gray-600">Obra Social</p>
+                  <p className="font-semibold text-gray-800">
+                    {selectedPaciente.obras_sociales?.nombre || "Particular"}
+                  </p>
+                </div>
+              </div>
             </div>
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-orange-200">
+            <button
+              onClick={() => {
+                setSelectedPaciente(null);
+                setPacientes([]);
+                setBusquedaValor("");
+              }}
+              className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+            >
+              Nueva búsqueda
+            </button>
           </div>
         </div>
       )}
 
-      {/* Preguntar si crear nueva ficha */}
-      {askCreate && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 text-center">
-          <UserX className="w-12 h-12 text-amber-500 mx-auto mb-3" />
-          <p className="text-amber-800 font-semibold mb-4">
-            No se encontró ningún paciente. ¿Desea crear una nueva ficha?
+      {/* No encontrado */}
+      {notFound && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <UserX className="w-12 h-12 text-red-400 mx-auto mb-3" />
+          <p className="text-red-700 font-semibold mb-2">
+            No se encontró ningún paciente
           </p>
-          <div className="flex gap-3 justify-center">
-            <button
-              className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 
-                       transition-all duration-200 font-semibold flex items-center gap-2"
-              onClick={handleCreateYes}
-            >
-              <CheckCircle className="w-5 h-5" />
-              Sí, crear ficha
-            </button>
-            <button
-              className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 
-                       transition-all duration-200 font-semibold"
-              onClick={() => setAskCreate(false)}
-            >
-              No, cancelar
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Formulario para nuevo paciente */}
-      {showForm && (
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
-          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <UserPlus className="w-5 h-5 text-blue-500" />
-            Crear Nueva Ficha de Paciente
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">Nombre *</label>
-              <input
-                placeholder="Ingrese nombre"
-                value={nuevo.nombre}
-                onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 
-                         focus:ring-blue-400 focus:border-transparent"
-                required
-              />
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">Apellido *</label>
-              <input
-                placeholder="Ingrese apellido"
-                value={nuevo.apellido}
-                onChange={(e) => setNuevo({ ...nuevo, apellido: e.target.value })}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 
-                         focus:ring-blue-400 focus:border-transparent"
-                required
-              />
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">Documento *</label>
-              <input
-                placeholder="DNI sin puntos"
-                value={nuevo.documento}
-                onChange={(e) => setNuevo({ ...nuevo, documento: e.target.value })}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 
-                         focus:ring-blue-400 focus:border-transparent"
-                required
-              />
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">Email</label>
-              <input
-                placeholder="correo@ejemplo.com"
-                value={nuevo.email}
-                onChange={(e) => setNuevo({ ...nuevo, email: e.target.value })}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 
-                         focus:ring-blue-400 focus:border-transparent"
-              />
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">Teléfono</label>
-              <input
-                placeholder="Número de teléfono"
-                value={nuevo.telefono}
-                onChange={(e) => setNuevo({ ...nuevo, telefono: e.target.value })}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 
-                         focus:ring-blue-400 focus:border-transparent"
-              />
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">Fecha Nacimiento</label>
-              <input
-                type="date"
-                value={nuevo.fecha_nacimiento}
-                onChange={(e) => setNuevo({ ...nuevo, fecha_nacimiento: e.target.value })}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 
-                         focus:ring-blue-400 focus:border-transparent"
-              />
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">Obra Social (ID)</label>
-              <input
-                type="number"
-                placeholder="ID de obra social"
-                value={nuevo.obra_social_id ?? ""}
-                onChange={(e) => setNuevo({
-                  ...nuevo,
-                  obra_social_id: Number(e.target.value) || undefined,
-                })}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 
-                         focus:ring-blue-400 focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-3 mt-6 justify-end">
-            <button
-              onClick={() => setShowForm(false)}
-              className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 
-                       transition-all duration-200 font-semibold"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={crearPaciente}
-              className="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg 
-                       hover:from-green-600 hover:to-green-700 shadow-md transform transition-all 
-                       duration-200 hover:scale-[1.02] active:scale-[0.98] font-semibold flex items-center gap-2"
-            >
-              <CheckCircle className="w-5 h-5" />
-              Crear Paciente
-            </button>
-          </div>
+          <p className="text-red-600 text-sm">
+            Verifique que los datos ingresados sean correctos
+          </p>
         </div>
       )}
     </div>
