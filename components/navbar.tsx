@@ -73,6 +73,23 @@ const X = ({ className }: IconProps) => (
     <line x1="6" y1="6" x2="18" y2="18"></line>
   </svg>
 );
+
+/* --- Nuevos íconos --- */
+const UserPlus = ({ className }: IconProps) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+    <circle cx="8.5" cy="7" r="4"></circle>
+    <line x1="20" y1="8" x2="20" y2="14"></line>
+    <line x1="17" y1="11" x2="23" y2="11"></line>
+  </svg>
+);
+
+const Search = ({ className }: IconProps) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <circle cx="11" cy="11" r="8"></circle>
+    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+);
 /* ---------- Fin íconos ---------- */
 
 const Navbar: React.FC = () => {
@@ -82,8 +99,8 @@ const Navbar: React.FC = () => {
 
   const menuItems = [
     { id: 'turnos', label: 'Calendario', icon: Calendar, href: '/turnos' },
-    { id: 'pacientes', label: 'Nuevo Paciente', icon: Users, href: '/pacientes' },
-    { id: 'historial', label: 'Buscar Pacientes', icon: FileText, href: '/buscar' },
+    { id: 'pacientes', label: 'Nuevo Paciente', icon: UserPlus, href: '/pacientes' },
+    { id: 'historial', label: 'Buscar Pacientes', icon: Search, href: '/buscar' },
     { id: 'profesionales', label: 'Profesionales', icon: UserCheck, href: '/profesionales' },
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3, href: '/dashboard' },
   ];
@@ -103,7 +120,6 @@ const Navbar: React.FC = () => {
   const handleLogout = () => {
     try {
       localStorage.clear();
-      // si usás algo en sessionStorage/cookies, limpiarlo acá
     } finally {
       setIsMobileMenuOpen(false);
       router.push(loginHref);
@@ -139,7 +155,6 @@ const Navbar: React.FC = () => {
 
         {/* Login / Logout */}
         <div className="p-4 border-t border-gray-200 space-y-2">
-
           <button
             type="button"
             onClick={handleLogout}

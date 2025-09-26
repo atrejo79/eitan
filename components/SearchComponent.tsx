@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-// Íconos SVG personalizados
+// ===== Íconos =====
 const Search = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <circle cx="11" cy="11" r="8"></circle>
@@ -52,14 +52,6 @@ const Shield = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const AlertCircle = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <circle cx="12" cy="12" r="10"></circle>
-    <line x1="12" y1="8" x2="12" y2="12"></line>
-    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-  </svg>
-);
-
 const UserX = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -69,6 +61,7 @@ const UserX = ({ className }: { className?: string }) => (
   </svg>
 );
 
+// ===== Tipo =====
 type Paciente = {
   id: number;
   nombre: string;
@@ -78,9 +71,7 @@ type Paciente = {
   telefono?: string;
   fecha_nacimiento?: string;
   obra_social_id?: number;
-  obras_sociales?: {
-    nombre: string;
-  };
+  obras_sociales?: { nombre: string };
 };
 
 export default function SearchComponent() {
@@ -100,33 +91,18 @@ export default function SearchComponent() {
       return;
     }
 
-    // Validaciones según tipo de búsqueda
-    if (busquedaTipo === "documento") {
-      const documentoLimpio = busquedaValor.replace(/\D/g, '');
-      if (documentoLimpio.length < 7 || documentoLimpio.length > 8) {
-        alert("El documento debe tener entre 7 y 8 dígitos.");
-        return;
-      }
-    }
-
-    if (busquedaTipo === "apellido") {
-      if (!/^[A-Za-zÁÉÍÓÚáéíóúñÑ ]+$/.test(busquedaValor)) {
-        alert("El apellido solo debe contener letras.");
-        return;
-      }
-    }
-
     setLoading(true);
     setNotFound(false);
-    
+
     try {
-      const query = busquedaTipo === "documento"
-        ? `documento=${busquedaValor.replace(/\D/g, '')}`
-        : `apellido=${busquedaValor}`;
-      
+      const query =
+        busquedaTipo === "documento"
+          ? `documento=${busquedaValor.replace(/\D/g, "")}`
+          : `apellido=${busquedaValor}`;
+
       const res = await fetch(`/api/buscar-pacientes?${query}`);
       const data: Paciente[] = await res.json();
-      
+
       setPacientes(data);
 
       if (data.length === 0) {
@@ -139,30 +115,28 @@ export default function SearchComponent() {
       }
     } catch (error) {
       console.error("Error en búsqueda:", error);
-      alert("Error al realizar la búsqueda. Por favor, intente nuevamente.");
+      alert("Error al realizar la búsqueda.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      buscarPacientes();
-    }
+    if (e.key === "Enter") buscarPacientes();
   };
 
   const formatearFecha = (fecha?: string) => {
     if (!fecha) return "-";
     const date = new Date(fecha);
-    return date.toLocaleDateString('es-AR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
+    return date.toLocaleDateString("es-AR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
     });
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+    <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <div className="p-3 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-lg">
@@ -174,91 +148,79 @@ export default function SearchComponent() {
         </div>
       </div>
 
-      {/* Buscador */}
+      {/* Selector búsqueda */}
       <div className="space-y-4 mb-6">
-        {/* Tipo de búsqueda */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Buscar por:
-          </label>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => setBusquedaTipo("documento")}
-              className={`px-4 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2
-                ${busquedaTipo === "documento" 
-                  ? 'bg-gradient-to-r from-orange-400 to-yellow-400 text-white shadow-md transform scale-105' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-            >
-              <CreditCard className="w-5 h-5" />
-              Documento
-            </button>
-            <button
-              onClick={() => setBusquedaTipo("apellido")}
-              className={`px-4 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2
-                ${busquedaTipo === "apellido" 
-                  ? 'bg-gradient-to-r from-orange-400 to-yellow-400 text-white shadow-md transform scale-105' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-            >
-              <User className="w-5 h-5" />
-              Apellido
-            </button>
-          </div>
+        <label className="block text-sm font-medium text-gray-700">Buscar por:</label>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => setBusquedaTipo("documento")}
+            className={`px-4 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2
+              ${
+                busquedaTipo === "documento"
+                  ? "bg-gradient-to-r from-orange-400 to-yellow-400 text-white shadow-md transform scale-105"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+          >
+            <CreditCard className="w-5 h-5" />
+            Documento
+          </button>
+          <button
+            onClick={() => setBusquedaTipo("apellido")}
+            className={`px-4 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2
+              ${
+                busquedaTipo === "apellido"
+                  ? "bg-gradient-to-r from-orange-400 to-yellow-400 text-white shadow-md transform scale-105"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+          >
+            <User className="w-5 h-5" />
+            Apellido
+          </button>
         </div>
 
-        {/* Campo de búsqueda */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            {busquedaTipo === "documento" ? "Número de Documento" : "Apellido del Paciente"}
-          </label>
-          <div className="flex gap-3">
-            <input
-              type="text"
-              value={busquedaValor}
-              onChange={(e) => setBusquedaValor(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder={
-                busquedaTipo === "documento" 
-                  ? "Ej: 12345678" 
-                  : "Ej: García"
-              }
-              className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 
+        <div className="flex gap-3">
+          <input
+            type="text"
+            value={busquedaValor}
+            onChange={(e) => setBusquedaValor(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder={busquedaTipo === "documento" ? "Ej: 12345678" : "Ej: García"}
+            className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 
                        focus:ring-orange-400 focus:border-transparent transition-all duration-200"
-            />
-            <button
-              onClick={buscarPacientes}
-              disabled={loading}
-              className="px-6 py-3 bg-gradient-to-r from-orange-400 to-yellow-400 text-white rounded-lg 
+          />
+          <button
+            onClick={buscarPacientes}
+            disabled={loading}
+            className="px-6 py-3 bg-gradient-to-r from-orange-400 to-yellow-400 text-white rounded-lg 
                        hover:from-orange-500 hover:to-yellow-500 shadow-md transform transition-all 
                        duration-200 hover:scale-[1.02] active:scale-[0.98] font-semibold 
                        disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
-                  Buscando...
-                </>
-              ) : (
-                <>
-                  <Search className="w-5 h-5" />
-                  Buscar
-                </>
-              )}
-            </button>
-          </div>
+          >
+            {loading ? (
+              <>
+                <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
+                Buscando...
+              </>
+            ) : (
+              <>
+                <Search className="w-5 h-5" />
+                Buscar
+              </>
+            )}
+          </button>
         </div>
       </div>
 
-      {/* Resultados */}
-      {/* Si hay varios pacientes */}
+      {/* Resultados múltiples */}
       {pacientes.length > 1 && !selectedPaciente && (
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-3">
             Se encontraron {pacientes.length} pacientes:
           </label>
           <div className="space-y-2">
-            {pacientes.map((p) => (
+            {pacientes.map((p, index) => (
               <button
-                key={p.id}
+                key={`${p.id ?? "paciente"}-${index}`}
                 onClick={() => setSelectedPaciente(p)}
                 className="w-full p-4 bg-gray-50 hover:bg-gradient-to-r hover:from-orange-50 hover:to-yellow-50 
                          border border-gray-200 hover:border-orange-300 rounded-lg transition-all duration-200 
@@ -276,8 +238,12 @@ export default function SearchComponent() {
                       <p className="text-sm text-gray-600">DNI: {p.documento}</p>
                     </div>
                   </div>
-                  <svg className="w-5 h-5 text-gray-400 group-hover:text-orange-500 transition-colors" 
-                       fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-5 h-5 text-gray-400 group-hover:text-orange-500 transition-colors"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <polyline points="9,18 15,12 9,6"></polyline>
                   </svg>
                 </div>
@@ -287,14 +253,14 @@ export default function SearchComponent() {
         </div>
       )}
 
-      {/* Paciente seleccionado o único resultado */}
+      {/* Paciente seleccionado */}
       {selectedPaciente && (
         <div className="bg-gradient-to-br from-orange-50 to-yellow-50 rounded-xl p-6 border border-orange-200">
           <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
             <User className="w-5 h-5 text-orange-500" />
             Información del Paciente
           </h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-3">
               <div className="flex items-center gap-3">
@@ -306,7 +272,7 @@ export default function SearchComponent() {
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-3">
                 <CreditCard className="w-4 h-4 text-orange-400" />
                 <div>
@@ -314,7 +280,7 @@ export default function SearchComponent() {
                   <p className="font-semibold text-gray-800">{selectedPaciente.documento}</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-3">
                 <Calendar className="w-4 h-4 text-orange-400" />
                 <div>
@@ -325,28 +291,24 @@ export default function SearchComponent() {
                 </div>
               </div>
             </div>
-            
+
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-orange-400" />
                 <div>
                   <p className="text-xs text-gray-600">Email</p>
-                  <p className="font-semibold text-gray-800">
-                    {selectedPaciente.email || "-"}
-                  </p>
+                  <p className="font-semibold text-gray-800">{selectedPaciente.email || "-"}</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-3">
                 <Phone className="w-4 h-4 text-orange-400" />
                 <div>
                   <p className="text-xs text-gray-600">Teléfono</p>
-                  <p className="font-semibold text-gray-800">
-                    {selectedPaciente.telefono || "-"}
-                  </p>
+                  <p className="font-semibold text-gray-800">{selectedPaciente.telefono || "-"}</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-3">
                 <Shield className="w-4 h-4 text-orange-400" />
                 <div>
@@ -378,9 +340,7 @@ export default function SearchComponent() {
       {notFound && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
           <UserX className="w-12 h-12 text-red-400 mx-auto mb-3" />
-          <p className="text-red-700 font-semibold mb-2">
-            No se encontró ningún paciente
-          </p>
+          <p className="text-red-700 font-semibold mb-2">No se encontró ningún paciente</p>
           <p className="text-red-600 text-sm">
             Verifique que los datos ingresados sean correctos
           </p>
