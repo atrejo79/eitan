@@ -81,7 +81,7 @@ const Navbar: React.FC = () => {
   const router = useRouter();
 
   const menuItems = [
-    { id: 'turnos', label: 'Calendario/Turnos', icon: Calendar, href: '/turnos' },
+    { id: 'turnos', label: 'Calendario', icon: Calendar, href: '/turnos' },
     { id: 'pacientes', label: 'Pacientes', icon: Users, href: '/pacientes' },
     { id: 'historial', label: 'Buscar Pacientes', icon: FileText, href: '/buscar' },
     { id: 'profesionales', label: 'Profesionales', icon: UserCheck, href: '/profesionales' },

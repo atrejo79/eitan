@@ -241,8 +241,7 @@ export default function TurnosPage() {
   // Color por profesión
   const getColorByProfession = (profesion: string) => {
     const colors: { [key: string]: string } = {
-      Médico: "from-blue-400 to-blue-500",
-      Enfermero: "from-green-400 to-green-500",
+      Clínico: "from-blue-400 to-blue-500",
       Odontólogo: "from-purple-400 to-purple-500",
       Psicólogo: "from-pink-400 to-pink-500",
       Nutricionista: "from-yellow-400 to-yellow-500",
@@ -391,7 +390,7 @@ export default function TurnosPage() {
 
       {/* Modal */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+        <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex justify-center items-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
             {/* Header del modal */}
             <div className="flex justify-between items-center mb-6">

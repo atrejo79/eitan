@@ -1,17 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-/**
- * GET /api/agendadiaria
- * 
- * Parámetros (query params):
- * - profesional_id: ID del profesional (obligatorio)
- * - fecha: Fecha en formato YYYY-MM-DD (opcional)
- * 
- * Funcionalidad:
- * Devuelve los turnos asignados a un profesional en un día específico.
- * Si no se envía la fecha, devuelve todos los turnos del profesional.
- */
 export async function GET(req: Request) {
   try {
     // Obtener parámetros de la URL
