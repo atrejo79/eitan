@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 
-// ===== Íconos SVG personalizados =====
+/* ===================== Íconos ===================== */
 const Plus = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -48,7 +48,6 @@ const X = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// === NUEVOS ÍCONOS PARA NAVEGAR SEMANAS ===
 const ChevronLeft = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <polyline points="15,18 9,12 15,6"></polyline>
@@ -61,24 +60,15 @@ const ChevronRight = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// ===== Tipos =====
+/* ===================== Tipos ===================== */
 type Turno = {
   turno_id: number;
   profesionales: {
     matricula: string;
-    usuarios: {
-      nombre: string;
-      apellido: string;
-    };
-    profesiones: {
-      nombre: string;
-    };
+    usuarios: { nombre: string; apellido: string };
+    profesiones: { nombre: string };
   };
-  pacientes: {
-    nombre: string;
-    apellido: string;
-    documento: string;
-  };
+  pacientes: { nombre: string; apellido: string; documento: string };
   inicio: string;
   fin: string;
 };
@@ -93,21 +83,178 @@ type Paciente = {
 type Profesional = {
   profesional_id: number;
   matricula: string;
-  usuarios: {
-    nombre: string;
-    apellido: string;
-  };
-  profesiones: {
-    nombre: string;
-  };
+  usuarios: { nombre: string; apellido: string };
+  profesiones: { nombre: string };
 };
 
+/* ===================== Utils ===================== */
+const norm = (s: string) =>
+  s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+
+const getStartOfWeek = (date: Date) => {
+  const d = new Date(date);
+  const day = d.getDay(); // 0 dom, 1 lun, ..., 6 sáb
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // llevar a lunes
+  d.setDate(diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+const addDays = (date: Date, days: number) => {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+};
+
+/* ===================== Searchable Combo (sin librerías) ===================== */
+type ComboItem = { value: string; label: string; keywords?: string };
+
+function SearchableCombo({
+  items,
+  value,
+  onChange,
+  placeholder = "Buscar…",
+  emptyText = "Sin resultados",
+}: {
+  items: ComboItem[];
+  value?: string | null;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  emptyText?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [highlight, setHighlight] = useState(0);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const selected = useMemo(
+    () => items.find((i) => i.value === value) ?? null,
+    [items, value]
+  );
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return items;
+    const q = norm(query);
+    return items.filter((i) =>
+      norm(`${i.label} ${i.keywords ?? ""}`).includes(q)
+    );
+  }, [items, query]);
+
+  // cerrar por click afuera
+  useEffect(() => {
+    const onClickOutside = (e: MouseEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) {
+        setOpen(false);
+        setQuery("");
+      }
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    setHighlight((h) =>
+      filtered.length === 0 ? 0 : Math.min(h, filtered.length - 1)
+    );
+  }, [open, filtered.length]);
+
+  const commitChoice = (idx: number) => {
+    const item = filtered[idx];
+    if (!item) return;
+    onChange(item.value);
+    setOpen(false);
+    setQuery("");
+    requestAnimationFrame(() => inputRef.current?.focus());
+  };
+
+  return (
+    <div ref={rootRef} className="relative">
+      <div
+        className="flex items-center gap-2 rounded-lg border border-gray-300
+          focus-within:ring-2 focus-within:ring-orange-400 focus-within:border-transparent
+          transition-all duration-200 bg-white"
+        onClick={() => {
+          setOpen(true);
+          inputRef.current?.focus();
+        }}
+      >
+        <input
+          ref={inputRef}
+          className="w-full p-3 rounded-lg outline-none text-gray-700 bg-transparent"
+          placeholder={placeholder}
+          value={open || query ? query : selected?.label ?? ""}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowDown") {
+              e.preventDefault();
+              setOpen(true);
+              setHighlight((h) => Math.min(h + 1, Math.max(filtered.length - 1, 0)));
+            } else if (e.key === "ArrowUp") {
+              e.preventDefault();
+              setHighlight((h) => Math.max(h - 1, 0));
+            } else if (e.key === "Enter") {
+              e.preventDefault();
+              if (open) commitChoice(highlight);
+            } else if (e.key === "Escape") {
+              setOpen(false);
+              setQuery("");
+            }
+          }}
+        />
+        <svg
+          className={`w-5 h-5 mr-3 text-gray-500 transition-transform ${open ? "rotate-180" : ""}`}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+        >
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </div>
+
+      {open && (
+        <div
+          role="listbox"
+          className="absolute z-50 mt-1 w-full max-h-64 overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg"
+        >
+          {filtered.length === 0 ? (
+            <div className="px-3 py-2 text-sm text-gray-500">{emptyText}</div>
+          ) : (
+            filtered.map((item, idx) => (
+              <button
+                key={item.value}
+                type="button"
+                role="option"
+                aria-selected={value === item.value}
+                onMouseEnter={() => setHighlight(idx)}
+                onClick={() => commitChoice(idx)}
+                className={`w-full text-left px-3 py-2 text-sm
+                  ${idx === highlight ? "bg-orange-50" : ""}
+                  ${value === item.value ? "font-semibold text-gray-900" : "text-gray-700"}
+                  hover:bg-orange-50`}
+              >
+                {item.label}
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ===================== Página ===================== */
 export default function TurnosPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [profesionales, setProfesionales] = useState<Profesional[]>([]);
-  const [pacienteId, setPacienteId] = useState("");
-  const [profesionalId, setProfesionalId] = useState("");
+  const [pacienteId, setPacienteId] = useState("");     // guardamos como string para el combo
+  const [profesionalId, setProfesionalId] = useState(""); // idem
   const [fecha, setFecha] = useState("");
   const [hora, setHora] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -115,29 +262,10 @@ export default function TurnosPage() {
   const [isLoadingTurnos, setIsLoadingTurnos] = useState(true);
   const [turnos, setTurnos] = useState<Turno[]>([]);
 
-  // ===== Helpers de fecha / semana =====
-  const getStartOfWeek = (date: Date) => {
-    const d = new Date(date); // no mutar parámetro
-    const day = d.getDay(); // 0 dom, 1 lun, ..., 6 sáb
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // llevar a lunes
-    d.setDate(diff);
-    d.setHours(0, 0, 0, 0);
-    return d;
-  };
-
-  const addDays = (date: Date, days: number) => {
-    const d = new Date(date);
-    d.setDate(d.getDate() + days);
-    return d;
-  };
-
-  // === NUEVO: estado para controlar la semana visible ===
+  // Semana visible
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => getStartOfWeek(new Date()));
-
-  // Rango de días a mostrar (depende de currentWeekStart)
   const daysOfWeek = Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i));
 
-  // Label bonito de rango semanal (p.ej. "23–29 sep 2025")
   const weekRangeLabel = (() => {
     const start = daysOfWeek[0];
     const end = daysOfWeek[6];
@@ -166,7 +294,7 @@ export default function TurnosPage() {
     setSuccessMessage("");
 
     const nuevoTurno = {
-      profesional_id: profesionalId,
+      profesional_id: profesionalId, // si la API espera número, casteá en backend o hacé Number(profesionalId)
       paciente_id: pacienteId,
       fecha,
       hora,
@@ -208,10 +336,7 @@ export default function TurnosPage() {
       const res = await fetch("/api/turnos");
       const data: Turno[] = await res.json();
 
-      data.sort(
-        (a, b) => new Date(a.inicio).getTime() - new Date(b.inicio).getTime()
-      );
-
+      data.sort((a, b) => new Date(a.inicio).getTime() - new Date(b.inicio).getTime());
       setTurnos(data);
     } catch (error) {
       console.error("Error cargando turnos", error);
@@ -225,8 +350,8 @@ export default function TurnosPage() {
     cargarTurnos();
   }, []);
 
-  const turnosPorDia = (day: Date) => {
-    return turnos
+  const turnosPorDia = (day: Date) =>
+    turnos
       .filter((t) => {
         const inicio = new Date(t.inicio);
         return (
@@ -236,9 +361,7 @@ export default function TurnosPage() {
         );
       })
       .sort((a, b) => new Date(a.inicio).getTime() - new Date(b.inicio).getTime());
-  };
 
-  // Color por profesión
   const getColorByProfession = (profesion: string) => {
     const colors: { [key: string]: string } = {
       Clínico: "from-blue-400 to-blue-500",
@@ -250,10 +373,30 @@ export default function TurnosPage() {
     return colors[profesion] || colors["default"];
   };
 
-  // === Handlers para navegar semanas ===
   const goPrevWeek = () => setCurrentWeekStart((d) => addDays(d, -7));
   const goNextWeek = () => setCurrentWeekStart((d) => addDays(d, +7));
   const goTodayWeek = () => setCurrentWeekStart(getStartOfWeek(new Date()));
+
+  // ===== Items para combos =====
+  const profesionalItems: ComboItem[] = useMemo(
+    () =>
+      profesionales.map((pr) => ({
+        value: String(pr.profesional_id),
+        label: `Dr. ${pr.usuarios.apellido} ${pr.usuarios.nombre} — ${pr.profesiones.nombre}`,
+        keywords: `${pr.usuarios.nombre} ${pr.usuarios.apellido} ${pr.profesiones.nombre} ${pr.matricula}`,
+      })),
+    [profesionales]
+  );
+
+  const pacienteItems: ComboItem[] = useMemo(
+    () =>
+      pacientes.map((p) => ({
+        value: String(p.paciente_id),
+        label: `${p.apellido} ${p.nombre} — DNI: ${p.documento}`,
+        keywords: `${p.nombre} ${p.apellido} ${p.documento}`,
+      })),
+    [pacientes]
+  );
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -263,7 +406,7 @@ export default function TurnosPage() {
         <p className="text-gray-600">Visualización de los turnos médicos del consultorio</p>
       </div>
 
-      {/* === NUEVO: Barra de navegación semanal === */}
+      {/* Barra de navegación semanal */}
       <div className="mb-4 flex items-center gap-3 justify-between">
         <div className="flex items-center gap-2">
           <button
@@ -309,7 +452,7 @@ export default function TurnosPage() {
         Agregar Nuevo Turno
       </button>
 
-      {/* Calendario de turnos */}
+      {/* Calendario */}
       {isLoadingTurnos ? (
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
@@ -407,50 +550,34 @@ export default function TurnosPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Paciente */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                  <User className="w-4 h-4 text-orange-400" />
-                  Paciente
-                </label>
-                <select
-                  value={pacienteId}
-                  onChange={(e) => setPacienteId(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 
-                           focus:ring-orange-400 focus:border-transparent transition-all duration-200"
-                  required
-                >
-                  <option value="" disabled hidden>
-                    Seleccione un paciente
-                  </option>
-                  {pacientes.map((p) => (
-                    <option key={p.paciente_id} value={p.paciente_id}>
-                      {p.apellido} {p.nombre} - DNI: {p.documento}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Profesional */}
+              {/* Profesional (Combo) */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                   <Stethoscope className="w-4 h-4 text-orange-400" />
                   Profesional
                 </label>
-                <select
+                <SearchableCombo
+                  items={profesionalItems}
                   value={profesionalId}
-                  onChange={(e) => setProfesionalId(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 
-                           focus:ring-orange-400 focus:border-transparent transition-all duration-200"
-                  required
-                >
-                  <option value="">Seleccione un profesional</option>
-                  {profesionales.map((pr) => (
-                    <option key={pr.profesional_id} value={pr.profesional_id}>
-                      Dr. {pr.usuarios.apellido} {pr.usuarios.nombre} - {pr.profesiones.nombre}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => setProfesionalId(v)}
+                  placeholder="Escribí nombre, apellido, profesión o matrícula…"
+                  emptyText="No se encontraron profesionales"
+                />
+              </div>
+
+              {/* Paciente (Combo) */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <User className="w-4 h-4 text-orange-400" />
+                  Paciente
+                </label>
+                <SearchableCombo
+                  items={pacienteItems}
+                  value={pacienteId}
+                  onChange={(v) => setPacienteId(v)}
+                  placeholder="Escribí nombre, apellido o DNI…"
+                  emptyText="No se encontraron pacientes"
+                />
               </div>
 
               {/* Fecha y Hora */}
@@ -465,7 +592,7 @@ export default function TurnosPage() {
                     value={fecha}
                     onChange={(e) => setFecha(e.target.value)}
                     className="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 
-                             focus:ring-orange-400 focus:border-transparent transition-all duration-200"
+                               focus:ring-orange-400 focus:border-transparent transition-all duration-200"
                     required
                   />
                 </div>
@@ -480,7 +607,7 @@ export default function TurnosPage() {
                     value={hora}
                     onChange={(e) => setHora(e.target.value)}
                     className="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 
-                             focus:ring-orange-400 focus:border-transparent transition-all duration-200"
+                               focus:ring-orange-400 focus:border-transparent transition-all duration-200"
                     required
                   />
                 </div>
@@ -498,17 +625,17 @@ export default function TurnosPage() {
                   onClick={() => setIsOpen(false)}
                   disabled={isLoading}
                   className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 
-                           disabled:opacity-50 font-semibold transition-all duration-200"
+                             disabled:opacity-50 font-semibold transition-all duration-200"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r text-gray-700 from-orange-400 to-yellow-400 text-white 
-                           rounded-lg hover:from-orange-500 hover:to-yellow-500 disabled:opacity-50 
-                           font-semibold flex items-center justify-center gap-2 transform transition-all 
-                           duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-orange-400 to-yellow-400 text-white 
+                             rounded-lg hover:from-orange-500 hover:to-yellow-500 disabled:opacity-50 
+                             font-semibold flex items-center justify-center gap-2 transform transition-all 
+                             duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {isLoading ? (
                     <>
