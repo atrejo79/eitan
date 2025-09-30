@@ -234,13 +234,17 @@ export default function GestionPacientesPage() {
       );
     }
 
-    if (selectedObraSocial !== 'todos') {
-      if (selectedObraSocial === 'particular') {
-        filtrados = filtrados.filter((p) => !p.obra_social_id);
-      } else {
-        filtrados = filtrados.filter((p) => p.obra_social_id?.toString() === selectedObraSocial);
-      }
+      if (selectedObraSocial !== 'todos') {
+    if (selectedObraSocial === 'particular') {
+      filtrados = filtrados.filter(
+        (p) => p.obras_sociales?.nombre?.toLowerCase() === 'particular'
+      );
+    } else {
+      filtrados = filtrados.filter(
+        (p) => p.obra_social_id?.toString() === selectedObraSocial
+      );
     }
+  }
 
     filtrados.sort((a, b) => a.apellido.toLowerCase().localeCompare(b.apellido.toLowerCase()));
     return filtrados;
@@ -435,9 +439,7 @@ export default function GestionPacientesPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{paciente.telefono || '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{formatearFecha(paciente.fecha_nacimiento)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {paciente.obra_social_id == null
-                        ? 'Particular'
-                        : (paciente.obras_sociales?.nombre ?? '—')}
+                      {paciente.obras_sociales?.nombre ?? '—'}
                     </td>
                   </tr>
                 ))}

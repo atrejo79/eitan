@@ -4,7 +4,11 @@ import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-  const pacientes = await prisma.pacientes.findMany();
+  const pacientes = await prisma.pacientes.findMany({
+    include: {
+      obras_sociales: { select: { nombre: true } }, // 👈 incluir nombre de obra social
+    },
+  });
   return NextResponse.json(pacientes);
 }
 
@@ -37,6 +41,9 @@ export async function POST(req: Request) {
         fecha_nacimiento: toUTCDate(fecha_nacimiento),
         fecha_registro: new Date(),
         obra_social_id: obra_social_id ?? null,
+      },
+      include: {
+        obras_sociales: { select: { nombre: true } }, // 👈 devolver también el nombre al crear
       },
     });
 
