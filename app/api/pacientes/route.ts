@@ -17,8 +17,9 @@ export async function POST(req: Request) {
       documento,
       email,
       telefono,
-      fecha_nacimiento, 
+      fecha_nacimiento,
       obra_social_id,
+      genero,
     } = body;
 
     if (!nombre || !apellido || !documento || !email || !telefono) {
@@ -32,7 +33,9 @@ export async function POST(req: Request) {
         documento,
         email,
         telefono,
+        genero: genero ?? null,
         fecha_nacimiento: toUTCDate(fecha_nacimiento),
+        fecha_registro: new Date(),
         obra_social_id: obra_social_id ?? null,
       },
     });
@@ -43,7 +46,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Documento o email ya existen.' }, { status: 409 });
     }
     if (e?.name === 'PrismaClientValidationError') {
-      return NextResponse.json({ error: 'Datos inválidos.' }, { status: 400 });
+      console.error('Error al crear paciente:', e);
+      return NextResponse.json(
+        { error: 'Datos inválidos.', detalle: e.message },
+        { status: 400 }
+      );
     }
     return NextResponse.json({ error: e?.message ?? 'Error inesperado' }, { status: 500 });
   }

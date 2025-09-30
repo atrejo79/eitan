@@ -153,6 +153,7 @@ type Paciente = {
   email?: string;
   telefono?: string;
   fecha_nacimiento?: string;
+  genero?: string;
   obra_social_id?: number | null;
   obras_sociales?: { nombre: string };
 };
@@ -171,12 +172,13 @@ export default function GestionPacientesPage() {
   const [selectedObraSocial, setSelectedObraSocial] = useState<string>('todos');
   const [currentPage, setCurrentPage] = useState(1);
 
-  const [form, setForm] = useState<Form>({
+  const [form, setForm] = useState<Paciente>({
     nombre: '',
     apellido: '',
     documento: '',
     email: '',
     telefono: '',
+    genero: '',
     fecha_nacimiento: '',
     obra_social_id: null,
   });
@@ -190,8 +192,8 @@ export default function GestionPacientesPage() {
     cargarObrasSociales();
   }, []);
   const obrasSinParticular = useMemo(
-  () => obras.filter(o => (o.nombre || '').toLowerCase() !== 'particular'),
-  [obras]
+    () => obras.filter(o => (o.nombre || '').toLowerCase() !== 'particular'),
+    [obras]
   );
   const cargarPacientes = async () => {
     setLoadingPacientes(true);
@@ -256,12 +258,12 @@ export default function GestionPacientesPage() {
 
   /* --------- Handlers --------- */
   const onChange =
-    (name: keyof Form) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-      let value: any = e.target.value;
-      if (name === 'obra_social_id') value = value ? Number(value) : null;
-      setForm((f) => ({ ...f, [name]: value }));
-    };
+    (name: keyof Paciente) =>
+      (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        let value: any = e.target.value;
+        if (name === 'obra_social_id') value = value ? Number(value) : null;
+        setForm((f) => ({ ...f, [name]: value }));
+      };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -361,7 +363,7 @@ export default function GestionPacientesPage() {
         </div>
 
         {/* Filters */}
-        
+
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <Filter className="w-5 h-5 text-gray-600" />
@@ -479,9 +481,8 @@ export default function GestionPacientesPage() {
                       <button
                         key={i}
                         onClick={() => goToPage(pageNumber)}
-                        className={`px-3 py-1 rounded-lg font-medium transition-colors ${
-                          currentPage === pageNumber ? 'bg-orange-400 text-white' : 'hover:bg-gray-100 text-gray-700'
-                        }`}
+                        className={`px-3 py-1 rounded-lg font-medium transition-colors ${currentPage === pageNumber ? 'bg-orange-400 text-white' : 'hover:bg-gray-100 text-gray-700'
+                          }`}
                       >
                         {pageNumber}
                       </button>
@@ -605,8 +606,51 @@ export default function GestionPacientesPage() {
                     />
                   </div>
                 </div>
+                {/* Género */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Género *
+                  </label>
+                  <div className="flex gap-8 items-center p-3 border border-gray-300 rounded-lg">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="genero"
+                        value="Hombre"
+                        checked={form.genero === 'Hombre'}
+                        onChange={onChange('genero')}
+                        required
+                        className="text-orange-400 focus:ring-orange-400"
+                      />
+                      Hombre
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="genero"
+                        value="Mujer"
+                        checked={form.genero === 'Mujer'}
+                        onChange={onChange('genero')}
+                        required
+                        className="text-orange-400 focus:ring-orange-400"
+                      />
+                      Mujer
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="genero"
+                        value="Otro"
+                        checked={form.genero === 'Otro'}
+                        onChange={onChange('genero')}
+                        required
+                        className="text-orange-400 focus:ring-orange-400"
+                      />
+                      Otro
+                    </label>
+                  </div>
+                </div>
               </div>
-
               {/* Contacto */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
