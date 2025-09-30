@@ -189,7 +189,10 @@ export default function GestionPacientesPage() {
     cargarPacientes();
     cargarObrasSociales();
   }, []);
-
+  const obrasSinParticular = useMemo(
+  () => obras.filter(o => (o.nombre || '').toLowerCase() !== 'particular'),
+  [obras]
+  );
   const cargarPacientes = async () => {
     setLoadingPacientes(true);
     try {
@@ -358,6 +361,7 @@ export default function GestionPacientesPage() {
         </div>
 
         {/* Filters */}
+        
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <Filter className="w-5 h-5 text-gray-600" />
@@ -367,10 +371,14 @@ export default function GestionPacientesPage() {
             value={selectedObraSocial}
             onChange={(e) => setSelectedObraSocial(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none 
-                       focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+                      focus:ring-2 focus:ring-orange-400 focus:border-transparent"
           >
             <option value="todos">Todas</option>
-            {obras.map((obra) => (
+            {/* Opción especial: sin obra social (NULL) */}
+            <option value="particular">Particular</option>
+
+            {/* 2) Solo obras reales (sin el registro 'PARTICULAR' de la tabla) */}
+            {obrasSinParticular.map(obra => (
               <option key={obra.obra_social_id} value={obra.obra_social_id.toString()}>
                 {obra.nombre}
               </option>
@@ -425,7 +433,9 @@ export default function GestionPacientesPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{paciente.telefono || '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{formatearFecha(paciente.fecha_nacimiento)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {paciente.obras_sociales?.nombre || 'Particular'}
+                      {paciente.obra_social_id == null
+                        ? 'Particular'
+                        : (paciente.obras_sociales?.nombre ?? '—')}
                     </td>
                   </tr>
                 ))}
