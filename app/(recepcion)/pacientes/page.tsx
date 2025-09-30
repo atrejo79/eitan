@@ -642,8 +642,8 @@ export default function GestionPacientesPage() {
                       <input
                         type="radio"
                         name="genero"
-                        value="Otro"
-                        checked={form.genero === 'Otro'}
+                        value="otro"
+                        checked={form.genero === 'otro'}
                         onChange={onChange('genero')}
                         required
                         className="text-orange-400 focus:ring-orange-400"
