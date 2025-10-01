@@ -184,7 +184,7 @@ function SearchableCombo({
     <div ref={rootRef} className="relative">
       <div
         className="flex items-center gap-2 rounded-lg border border-gray-300
-          focus-within:ring-2 focus-within:ring-orange-400 focus-within:border-transparent
+          focus-within:ring-2 focus-within:ring-[#6596d8] focus-within:border-transparent
           transition-all duration-200 bg-white"
         onClick={() => {
           setOpen(true);
@@ -497,7 +497,7 @@ export default function TurnosPage() {
         </div>
 
         <div className="text-sm md:text-base text-gray-700 font-semibold">
-          Semana: <span className="text-orange-600">{weekRangeLabel}</span>
+          Semana: <span className="text-[#6596d8]">{weekRangeLabel}</span>
         </div>
       </div>
 
