@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
-// ====== Íconos ======
+/* ---------- Íconos SVG ---------- */
 type IconProps = { className?: string };
 
 const Calendar = ({ className }: IconProps) => (
@@ -43,19 +43,11 @@ const UserCheck = ({ className }: IconProps) => (
   </svg>
 );
 
-const BarChart3 = ({ className }: IconProps) => (
+const LogOut = ({ className }: IconProps) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <line x1="12" y1="20" x2="12" y2="10"></line>
-    <line x1="18" y1="20" x2="18" y2="4"></line>
-    <line x1="6" y1="20" x2="6" y2="16"></line>
-  </svg>
-);
-
-const LogIn = ({ className }: IconProps) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-    <polyline points="10,17 15,12 10,7"></polyline>
-    <line x1="15" y1="12" x2="3" y2="12"></line>
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+    <polyline points="16,17 21,12 16,7"></polyline>
+    <line x1="21" y1="12" x2="9" y2="12"></line>
   </svg>
 );
 
@@ -74,102 +66,165 @@ const X = ({ className }: IconProps) => (
   </svg>
 );
 
-// ===============================================================
-
-type ItemProps = {
-  href: string;
-  label: string;
-  Icon: React.ComponentType<IconProps>;
-  closeMenu: () => void;
-};
-
+/* ---------- Componente ---------- */
 export default function NavbarProfesional() {
+  const [isExpanded, setIsExpanded] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [userName, setUserName] = useState('Usuario');
+  const [userEmail, setUserEmail] = useState('');
   const pathname = usePathname();
   const router = useRouter();
 
-  const loginHref = '/login'; // ruta login base
+  useEffect(() => {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        setUserName(user.nombre || 'Usuario');
+        setUserEmail(user.email || '');
+      }
+    } catch (error) {
+      console.error('Error al obtener usuario:', error);
+    }
+  }, []);
 
-  const items = [
-    { href: '/profesional/agenda', label: 'Mi Agenda', icon: Calendar },
-    { href: '/profesional/pacientes', label: 'Mis Pacientes', icon: Users },
-    { href: '/profesional/historias', label: 'Historias Clínicas', icon: FileText },
-    { href: '/profesional/perfil', label: 'Mi Perfil', icon: BarChart3 },
-  ] as const;
+  const menuItems = [
+    { id: 'agenda', label: 'Mi Agenda', icon: Calendar, href: '/profesional/agendadiaria' },
+    { id: 'pacientes', label: 'Mis Pacientes', icon: Users, href: '/profesional/pacientes' },
+    { id: 'historias', label: 'Historias Clínicas', icon: FileText, href: '/profesional/historias' },
+    { id: 'perfil', label: 'Mi Perfil', icon: UserCheck, href: '/profesional/perfil' },
+  ];
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
-
-  const itemClasses = (active: boolean) =>
-    `w-full flex items-center px-4 py-3 rounded-lg transition-all duration-200 ${
-      active
-        ? 'bg-gradient-to-r from-orange-400 to-yellow-400 text-white shadow-md'
-        : 'text-gray-700 hover:bg-gray-100 hover:text-orange-600'
-    }`;
+  const isActive = (href: string) => pathname === href || pathname?.startsWith(href + '/');
 
   const handleLogout = () => {
     try {
       localStorage.clear();
-      // sessionStorage.clear(); // si lo usás
-      // document.cookie = 'token=; Max-Age=0; path=/'; // si tenés cookie de cliente
     } finally {
       setIsMobileMenuOpen(false);
-      router.push(loginHref);
+      router.push('/login');
     }
   };
 
-  const Item = ({ href, label, Icon, closeMenu }: ItemProps) => (
-    <Link
-      href={href}
-      className={itemClasses(isActive(href))}
-      onClick={closeMenu}
-      aria-current={isActive(href) ? 'page' : undefined}
-    >
-      <Icon className="w-5 h-5 mr-3" />
-      <span className="font-medium">{label}</span>
-    </Link>
-  );
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className="hidden lg:flex lg:flex-col lg:w-64 bg-white shadow-lg border-r border-gray-200">
+      <aside
+        className={`hidden lg:flex lg:flex-col bg-white shadow-xl border-r border-gray-200 transition-all duration-300 ease-in-out ${
+          isExpanded ? 'lg:w-64' : 'lg:w-20'
+        } rounded-r-3xl fixed left-0 top-0 bottom-0 z-40`}
+        onMouseEnter={() => {
+          const timer = setTimeout(() => setIsExpanded(true), 500);
+          return () => clearTimeout(timer);
+        }}
+        onMouseLeave={() => setIsExpanded(false)}
+      >
         {/* Logo */}
         <div className="flex items-center justify-center p-6 border-b border-gray-200">
-          <div className="flex flex-col items-center space-y-3">
-            <img src="/images/eitan-logo.png" alt="EiTAN Logo" className="w-12 h-12 object-contain" />
-            <img src="/images/eitan-text.png" alt="EiTAN Salta" className="h-8 object-contain" />
+          <div className={`flex ${isExpanded ? 'flex-col' : 'flex-col'} items-center space-y-3 transition-all duration-300`}>
+            <img 
+              src="/images/eitan-logo.png" 
+              alt="EiTAN Logo" 
+              className={`object-contain transition-all duration-300 ${isExpanded ? 'w-12 h-12' : 'w-10 h-10'}`} 
+            />
+            {isExpanded && (
+              <img 
+                src="/images/eitan-text.png" 
+                alt="EiTAN Salta" 
+                className="h-8 object-contain opacity-0 animate-fade-in" 
+              />
+            )}
           </div>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-2">
-          {items.map(({ href, label, icon: Icon }) => (
-            <Item key={href} href={href} label={label} Icon={Icon} closeMenu={() => {}} />
-          ))}
+        {/* Menu */}
+        <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto">
+          {menuItems.map(({ id, label, icon: Icon, href }) => {
+            const active = isActive(href);
+            return (
+              <Link
+                key={id}
+                href={href}
+                className={`flex items-center px-3 py-3 rounded-xl transition-all duration-200 group relative ${
+                  active
+                    ? 'bg-gradient-to-r from-[#6596d8] to-[#b5e4e6] text-white shadow-lg'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+                aria-current={active ? 'page' : undefined}
+                title={!isExpanded ? label : undefined}
+              >
+                <Icon className={`flex-shrink-0 transition-all duration-200 ${isExpanded ? 'w-5 h-5' : 'w-6 h-6'}`} />
+                {isExpanded && (
+                  <span className="ml-3 font-medium whitespace-nowrap opacity-0 animate-fade-in">
+                    {label}
+                  </span>
+                )}
+                
+                {!isExpanded && (
+                  <div className="absolute left-full ml-2 px-3 py-1 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                    {label}
+                  </div>
+                )}
+              </Link>
+            );
+          })}
         </nav>
 
-        {/* Solo Logout */}
-        <div className="p-4 border-t border-gray-200">
+        {/* Usuario y Logout */}
+        <div className="p-4 border-t border-gray-200 space-y-3">
+          <div className={`flex items-center ${isExpanded ? 'px-3' : 'justify-center'} transition-all duration-300`}>
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#6596d8] to-[#b5e4e6] flex items-center justify-center text-white font-bold flex-shrink-0">
+              {getInitials(userName)}
+            </div>
+            {isExpanded && (
+              <div className="ml-3 opacity-0 animate-fade-in overflow-hidden">
+                <p className="text-sm font-semibold text-gray-800 truncate">{userName}</p>
+                <p className="text-xs text-gray-500 truncate">{userEmail}</p>
+              </div>
+            )}
+          </div>
+
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-orange-600 rounded-lg transition-all duration-200"
+            className={`w-full flex items-center px-3 py-3 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-200 group relative ${
+              !isExpanded && 'justify-center'
+            }`}
+            title={!isExpanded ? 'Cerrar sesión' : undefined}
           >
-            <LogIn className="w-5 h-5 mr-3 rotate-180" />
-            <span className="font-medium">Log out</span>
+            <LogOut className={`flex-shrink-0 transition-all duration-200 ${isExpanded ? 'w-5 h-5' : 'w-6 h-6'}`} />
+            {isExpanded && (
+              <span className="ml-3 font-medium opacity-0 animate-fade-in">Cerrar sesión</span>
+            )}
+            
+            {!isExpanded && (
+              <div className="absolute left-full ml-2 px-3 py-1 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                Cerrar sesión
+              </div>
+            )}
           </button>
         </div>
-      </div>
+      </aside>
 
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 bg-white shadow-md z-50 border-b border-gray-200">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center space-x-2">
-            <img src="/images/eitan-logo.png" alt="EiTAN Logo" className="w-6 h-6 object-contain" />
-            <img src="/images/eitan-text.png" alt="EiTAN Salta" className="h-5 object-contain" />
+            <img src="/images/eitan-logo.png" alt="EiTAN Logo" className="w-8 h-8 object-contain" />
+            <img src="/images/eitan-text.png" alt="EiTAN Salta" className="h-6 object-contain" />
           </div>
           <button
-            onClick={() => setIsMobileMenuOpen((v) => !v)}
-            className="p-2 rounded-md text-gray-600 hover:text-orange-600 hover:bg-gray-100"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2 rounded-md text-gray-600 hover:text-[#6596d8] hover:bg-gray-100"
           >
             {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -178,33 +233,67 @@ export default function NavbarProfesional() {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40" onClick={() => setIsMobileMenuOpen(false)}>
-          <div className="fixed left-0 top-16 bottom-0 w-64 bg-white shadow-lg" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={() => setIsMobileMenuOpen(false)}
+        >
+          <div className="fixed left-0 top-16 bottom-0 w-64 bg-white shadow-lg rounded-r-3xl" onClick={(e) => e.stopPropagation()}>
             <nav className="p-4 space-y-2">
-              {items.map(({ href, label, icon: Icon }) => (
-                <Item
-                  key={href}
-                  href={href}
-                  label={label}
-                  Icon={Icon}
-                  closeMenu={() => setIsMobileMenuOpen(false)}
-                />
-              ))}
+              {menuItems.map(({ id, label, icon: Icon, href }) => {
+                const active = isActive(href);
+                return (
+                  <Link
+                    key={id}
+                    href={href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center px-4 py-3 rounded-xl transition-all duration-200 ${
+                      active
+                        ? 'bg-gradient-to-r from-[#6596d8] to-[#b5e4e6] text-white shadow-lg'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                    aria-current={active ? 'page' : undefined}
+                  >
+                    <Icon className="w-5 h-5 mr-3" />
+                    <span className="font-medium">{label}</span>
+                  </Link>
+                );
+              })}
 
-              <div className="pt-4 border-t border-gray-200">
+              <div className="pt-4 border-t border-gray-200 space-y-3">
+                <div className="flex items-center px-4 py-2">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#6596d8] to-[#b5e4e6] flex items-center justify-center text-white font-bold">
+                    {getInitials(userName)}
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-semibold text-gray-800">{userName}</p>
+                    <p className="text-xs text-gray-500">{userEmail}</p>
+                  </div>
+                </div>
+
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-orange-600 rounded-lg transition-all duration-200"
+                  className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-200"
                 >
-                  <LogIn className="w-5 h-5 mr-3 rotate-180" />
-                  <span className="font-medium">Log out</span>
+                  <LogOut className="w-5 h-5 mr-3" />
+                  <span className="font-medium">Cerrar sesión</span>
                 </button>
               </div>
             </nav>
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out forwards;
+        }
+      `}</style>
     </>
   );
 }

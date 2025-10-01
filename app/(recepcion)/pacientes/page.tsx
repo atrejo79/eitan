@@ -330,7 +330,8 @@ export default function GestionPacientesPage() {
 
   /* --------- UI --------- */
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    //cambio aquí
+    <div className="p-6">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Gestión de Pacientes</h1>

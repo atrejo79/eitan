@@ -1,5 +1,12 @@
-import ReceptionSidebarLayout from '../../components/SidebarLayout';
+import Navbar from '@/components/navbar';
 
 export default function RecepcionLayout({ children }: { children: React.ReactNode }) {
-  return <ReceptionSidebarLayout>{children}</ReceptionSidebarLayout>;
+  return (
+    <>
+      <Navbar />
+      <main className="main-content">
+        {children}
+      </main>
+    </>
+  );
 }
