@@ -651,6 +651,7 @@ export default function TurnosPage() {
                     <input
                       type="date"
                       value={fecha}
+                      min={fechaLocal}
                       onChange={(e) => setFecha(e.target.value)}
                       className="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 
                                 focus:text-[#6596d8] focus:border-transparent transition-all duration-200"
