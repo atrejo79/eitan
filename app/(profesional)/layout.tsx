@@ -1,5 +1,12 @@
-import ProfesionalSidebarLayout from '../../components/ProfesionalSidebarLayout';
+import NavbarProfesional from '@/components/NavBarProfesional';
 
 export default function ProfesionalLayout({ children }: { children: React.ReactNode }) {
-  return <ProfesionalSidebarLayout>{children}</ProfesionalSidebarLayout>;
+  return (
+    <>
+      <NavbarProfesional />
+      <main className="main-content">
+        {children}
+      </main>
+    </>
+  );
 }

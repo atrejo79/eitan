@@ -213,7 +213,8 @@ export default function AgendaDiariaPage() {
   const turnosLibres = totalTurnos - turnosOcupados;
 
   return (
-    <main className="p-6 min-h-screen bg-gray-50">
+    //cambio aquí
+    <main className="p-6">
       {/* Header */}
       <div className="mb-6 bg-white rounded-xl p-4 shadow-sm border border-gray-200">
         <div className="flex items-center justify-between">

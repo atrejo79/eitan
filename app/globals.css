@@ -1,14 +1,52 @@
 @import "tailwindcss";
 
-/* Estilos personalizados si los necesitas */
+/* Variables de colores del tema */
 @layer base {
+  :root {
+    --primary: #2e75d4;
+    --primary-light: #6596d8;
+    --primary-lighter: #b5e4e6;
+    --secondary: #8ddee1;
+  }
+  
   html {
     scroll-behavior: smooth;
   }
 }
 
 @layer components {
+
+  .main-content {
+    @apply min-h-screen bg-gray-50 transition-all duration-300;
+    padding-left: 0;
+  }
+
+  @media (min-width: 1024px) {
+    .main-content {
+      padding-left: 5rem;
+    }
+  }
   .gradient-primary {
-    background: linear-gradient(135deg, #db7a34 0%, #e4bf8b 100%);
+    background: linear-gradient(135deg, #2e75d4 0%, #8ddee1 100%);
+  }
+  
+  .gradient-primary-light {
+    background: linear-gradient(135deg, #6596d8 0%, #b5e4e6 100%);
+  }
+  
+  .bg-primary {
+    background-color: var(--primary);
+  }
+  
+  .bg-primary-light {
+    background-color: var(--primary-light);
+  }
+  
+  .text-primary {
+    color: var(--primary);
+  }
+  
+  .border-primary {
+    border-color: var(--primary);
   }
 }
