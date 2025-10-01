@@ -461,13 +461,13 @@ export default function TurnosPage() {
     //cambio aquí 
     <div className="p-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Calendario de turnos</h1>
-        <p className="text-gray-600">Visualización de los turnos médicos del consultorio</p>
+      <div className="mb-6 text-center">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-[#2e75d4] to-[#8ddee1] bg-clip-text text-transparent mb-3">Calendario de turnos</h1>
+        <p className="text-gray-600 text-lg">Visualización de los turnos médicos del consultorio</p>
       </div>
 
       {/* Barra de navegación semanal */}
-      <div className="mb-4 flex items-center gap-3 justify-between">
+      <div className="flex flex-col items-center gap-4 mb-6">
         <div className="flex items-center gap-2">
           <button
             onClick={goPrevWeek}
@@ -503,9 +503,9 @@ export default function TurnosPage() {
 
       {/* Botón agregar turno */}
       <button
-        className="mb-6 px-6 py-3 bg-gradient-to-r from-orange-400 to-yellow-400 text-white rounded-lg 
-                   hover:from-orange-500 hover:to-yellow-500 shadow-lg transform transition-all duration-200 
-                   hover:scale-[1.02] active:scale-[0.98] font-semibold flex items-center gap-2"
+        className="px-6 py-3 bg-gradient-to-r from-[#6596d8] to-[#b5e4e6] text-white rounded-lg 
+               hover:from-[#2e75d4] hover:to-[#8ddee1] shadow-lg transform transition-all duration-200 
+               hover:scale-[1.02] active:scale-[0.98] font-semibold flex items-center gap-2"
         onClick={() => setIsOpen(true)}
       >
         <Plus className="w-5 h-5" />
@@ -516,7 +516,7 @@ export default function TurnosPage() {
       {isLoadingTurnos ? (
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-400 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#6596d8] mx-auto mb-4"></div>
             <p className="text-gray-600">Cargando turnos...</p>
           </div>
         </div>
@@ -531,15 +531,15 @@ export default function TurnosPage() {
                 key={idx}
                 className={`border rounded-xl p-3 transition-all duration-200 ${
                   isToday
-                    ? "bg-gradient-to-br from-orange-50 to-yellow-50 border-orange-300 shadow-lg"
+                    ? "bg-gradient-to-br from-[#6596d8]/10 to-[#b5e4e6]/10 border-[#6596d8] shadow-lg"
                     : "bg-white hover:shadow-md border-gray-200"
                 }`}
               >
                 <div className="mb-3 text-center">
-                  <h3 className={`font-bold ${isToday ? "text-orange-600" : "text-gray-700"}`}>
+                  <h3 className={`font-bold ${isToday ? "text-[#6596d8]" : "text-gray-700"}`}>
                     {day.toLocaleDateString("es-AR", { weekday: "short" })}
                   </h3>
-                  <p className={`text-2xl font-bold ${isToday ? "text-orange-500" : "text-gray-800"}`}>
+                  <p className={`text-2xl font-bold ${isToday ? "text-[#6596d8]" : "text-gray-800"}`}>
                     {day.getDate()}
                   </p>
                   <p className="text-xs text-gray-500">
@@ -598,7 +598,7 @@ export default function TurnosPage() {
             {/* Header del modal */}
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                <Calendar className="w-6 h-6 text-orange-500" />
+                <Calendar className="w-6 h-6 text-[#6596d8]" />
                 Nuevo Turno
               </h2>
               <button
@@ -613,7 +613,7 @@ export default function TurnosPage() {
               {/* Profesional (Combo) */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                  <Stethoscope className="w-4 h-4 text-orange-400" />
+                  <Stethoscope className="w-4 h-4 text-[#6596d8]" />
                   Profesional
                 </label>
                 <SearchableCombo
@@ -628,7 +628,7 @@ export default function TurnosPage() {
               {/* Paciente (Combo) */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                  <User className="w-4 h-4 text-orange-400" />
+                  <User className="w-4 h-4 text-[#6596d8]" />
                   Paciente
                 </label>
                 <SearchableCombo
@@ -645,7 +645,7 @@ export default function TurnosPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-orange-400" />
+                      <Calendar className="w-4 h-4 text-[#6596d8]" />
                       Fecha
                     </label>
                     <input
@@ -653,20 +653,20 @@ export default function TurnosPage() {
                       value={fecha}
                       onChange={(e) => setFecha(e.target.value)}
                       className="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 
-                                focus:ring-orange-400 focus:border-transparent transition-all duration-200"
+                                focus:text-[#6596d8] focus:border-transparent transition-all duration-200"
                       required
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-orange-400" />
+                      <Clock className="w-4 h-4 text-[#6596d8]" />
                       Hora
                     </label>
                     <select
                       value={hora}
                       onChange={(e) => setHora(e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all duration-200"
+                      className="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#6596d8] focus:border-transparent transition-all duration-200"
                       required
                     >
                       {horarios.map((h, i) => (
@@ -698,8 +698,8 @@ export default function TurnosPage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-orange-400 to-yellow-400 text-white 
-                             rounded-lg hover:from-orange-500 hover:to-yellow-500 disabled:opacity-50 
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-[#6596d8] to-[#b5e4e6] text-white 
+                             rounded-lg hover:from-[#2e75d4] hover:to-[#8ddee1] disabled:opacity-50 
                              font-semibold flex items-center justify-center gap-2 transform transition-all 
                              duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 >

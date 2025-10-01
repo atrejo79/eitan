@@ -333,27 +333,26 @@ export default function GestionPacientesPage() {
     //cambio aquí
     <div className="p-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Gestión de Pacientes</h1>
-        <p className="text-gray-600">Administra la información de los pacientes del consultorio</p>
+      <div className="mb-6 text-center">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-[#2e75d4] to-[#8ddee1] bg-clip-text text-transparent mb-3">Gestión de Pacientes</h1>
+        <p className="text-gray-600 text-lg">Administra la información de los pacientes del consultorio</p>
       </div>
 
       {/* Top controls */}
       <div className="space-y-4 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col items-center gap-4 mb-">
           <button
-            className="px-6 py-3 bg-gradient-to-r from-orange-400 to-yellow-400 text-white rounded-lg 
-                       hover:from-orange-500 hover:to-yellow-500 shadow-lg transform transition-all duration-200 
-                       hover:scale-[1.02] active:scale-[0.98] font-semibold flex items-center gap-2 
-                       whitespace-nowrap"
+            className="px-6 py-3 bg-gradient-to-r from-[#6596d8] to-[#b5e4e6] text-white rounded-lg 
+               hover:from-[#2e75d4] hover:to-[#8ddee1] shadow-lg transform transition-all duration-200 
+               hover:scale-[1.02] active:scale-[0.98] font-semibold flex items-center gap-2"
             onClick={() => setIsModalOpen(true)}
           >
             <UserPlus className="w-5 h-5" />
             Registrar Nuevo Paciente
           </button>
 
-          <div className="flex-1 max-w-md">
-            <div className="relative">
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <div className="relative max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
@@ -361,7 +360,7 @@ export default function GestionPacientesPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none 
-                           focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all duration-200"
+                   focus:ring-2 focus:ring-[#6596d8] focus:border-transparent transition-all duration-200"
               />
             </div>
           </div>
@@ -378,7 +377,7 @@ export default function GestionPacientesPage() {
             value={selectedObraSocial}
             onChange={(e) => setSelectedObraSocial(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none 
-                      focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+                  focus:ring-2 focus:ring-[#6596d8] focus:border-transparent"
           >
             <option value="todos">Todas</option>
             {/* Opción especial: sin obra social (NULL) */}
@@ -398,7 +397,7 @@ export default function GestionPacientesPage() {
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
         {loadingPacientes ? (
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-400"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#6596d8]"></div>
           </div>
         ) : pacientesPaginados.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-gray-500">
@@ -419,7 +418,7 @@ export default function GestionPacientesPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gradient-to-r from-orange-50 to-yellow-50 border-b border-orange-200">
+              <thead className="bg-gradient-to-r from-orange-50 to-yellow-50 border-b border-[#6596d8]/20">
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Documento</th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Apellido</th>
@@ -484,7 +483,7 @@ export default function GestionPacientesPage() {
                       <button
                         key={i}
                         onClick={() => goToPage(pageNumber)}
-                        className={`px-3 py-1 rounded-lg font-medium transition-colors ${currentPage === pageNumber ? 'bg-orange-400 text-white' : 'hover:bg-gray-100 text-gray-700'
+                        className={`px-3 py-1 rounded-lg font-medium transition-colors ${currentPage === pageNumber ? 'bg-[#6596d8] text-white' : 'hover:bg-gray-100 text-gray-700'
                           }`}
                       >
                         {pageNumber}
@@ -514,7 +513,7 @@ export default function GestionPacientesPage() {
             {/* Modal header */}
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                <div className="p-2 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-lg">
+                <div className="p-2 bg-gradient-to-br from-[#6596d8]/5 to-[#b5e4e6]/5 rounded-lg">
                   <UserPlus className="w-6 h-6 text-white" />
                 </div>
                 Registrar Nuevo Paciente
@@ -529,7 +528,7 @@ export default function GestionPacientesPage() {
               {/* Datos Personales */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                  <User className="w-5 h-5 text-orange-400" />
+                  <User className="w-5 h-5 text-[#6596d8]" />
                   Datos Personales
                 </h3>
 
@@ -538,12 +537,12 @@ export default function GestionPacientesPage() {
                   {/* Documento */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                      <CreditCard className="w-4 h-4 text-orange-400" />
+                      <CreditCard className="w-4 h-4 text-[#6596d8]" />
                       Documento *
                     </label>
                     <input
                       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 
-                                 focus:ring-orange-400 focus:border-transparent transition-all duration-200"
+                                 focus:ring-[#6596d8] focus:border-transparent transition-all duration-200"
                       placeholder="DNI sin puntos"
                       value={form.documento}
                       onChange={onChange('documento')}
@@ -554,12 +553,12 @@ export default function GestionPacientesPage() {
                   {/* Fecha de nacimiento */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-orange-400" />
+                      <Calendar className="w-4 h-4 text-[#6596d8]" />
                       Fecha de Nacimiento
                     </label>
                     <input
                       className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 
-                                  focus:ring-orange-400 focus:border-transparent transition-all duration-200
+                                  focus:ring-[#6596d8] focus:border-transparent transition-all duration-200
                                   ${dobError ? 'border-red-500' : 'border-gray-300'}`}
                       placeholder="DD/MM/AAAA"
                       inputMode="numeric"
@@ -588,7 +587,7 @@ export default function GestionPacientesPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Nombre *</label>
                     <input
                       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 
-                                 focus:ring-orange-400 focus:border-transparent transition-all duration-200"
+                                 focus:ring-[#6596d8] focus:border-transparent transition-all duration-200"
                       placeholder="Ingrese el nombre"
                       value={form.nombre}
                       onChange={onChange('nombre')}
@@ -601,7 +600,7 @@ export default function GestionPacientesPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Apellido *</label>
                     <input
                       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 
-                                 focus:ring-orange-400 focus:border-transparent transition-all duration-200"
+                                 focus:ring-[#6596d8] focus:border-transparent transition-all duration-200"
                       placeholder="Ingrese el apellido"
                       value={form.apellido}
                       onChange={onChange('apellido')}
@@ -623,7 +622,7 @@ export default function GestionPacientesPage() {
                         checked={form.genero === 'Hombre'}
                         onChange={onChange('genero')}
                         required
-                        className="text-orange-400 focus:ring-orange-400"
+                        className="text-[#6596d8] focus:ring-[#6596d8]"
                       />
                       Hombre
                     </label>
@@ -635,7 +634,7 @@ export default function GestionPacientesPage() {
                         checked={form.genero === 'Mujer'}
                         onChange={onChange('genero')}
                         required
-                        className="text-orange-400 focus:ring-orange-400"
+                        className="text-[#6596d8] focus:ring-[#6596d8]"
                       />
                       Mujer
                     </label>
@@ -647,7 +646,7 @@ export default function GestionPacientesPage() {
                         checked={form.genero === 'otro'}
                         onChange={onChange('genero')}
                         required
-                        className="text-orange-400 focus:ring-orange-400"
+                        className="text-[#6596d8] focus:ring-[#6596d8]"
                       />
                       Otro
                     </label>
@@ -657,19 +656,19 @@ export default function GestionPacientesPage() {
               {/* Contacto */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                  <Phone className="w-5 h-5 text-orange-400" />
+                  <Phone className="w-5 h-5 text-[#6596d8]" />
                   Información de Contacto
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                      <Mail className="w-4 h-4 text-orange-400" />
+                      <Mail className="w-4 h-4 text-[#6596d8]" />
                       Email *
                     </label>
                     <input
                       type="email"
                       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 
-                                 focus:ring-orange-400 focus:border-transparent transition-all duration-200"
+                                 focus:ring-[#6596d8] focus:border-transparent transition-all duration-200"
                       placeholder="correo@ejemplo.com"
                       value={form.email}
                       onChange={onChange('email')}
@@ -679,12 +678,12 @@ export default function GestionPacientesPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                      <Phone className="w-4 h-4 text-orange-400" />
+                      <Phone className="w-4 h-4 text-[#6596d8]" />
                       Teléfono *
                     </label>
                     <input
                       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 
-                                 focus:ring-orange-400 focus:border-transparent transition-all duration-200"
+                                 focus:ring-[#6596d8] focus:border-transparent transition-all duration-200"
                       placeholder="Número de teléfono"
                       value={form.telefono}
                       onChange={onChange('telefono')}
@@ -697,14 +696,14 @@ export default function GestionPacientesPage() {
               {/* Obra social */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-orange-400" />
+                  <Shield className="w-5 h-5 text-[#6596d8]" />
                   Cobertura Médica
                 </h3>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Obra Social</label>
                   <select
                     className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 
-                               focus:ring-orange-400 focus:border-transparent transition-all duration-200
+                               focus:ring-[#6596d8] focus:border-transparent transition-all duration-200
                                appearance-none bg-white"
                     value={form.obra_social_id ?? ''}
                     onChange={onChange('obra_social_id')}
@@ -746,8 +745,8 @@ export default function GestionPacientesPage() {
                 <button
                   type="submit"
                   disabled={isLoading || (!!dobRaw && !!dobError)}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-orange-400 to-yellow-400 text-white 
-                             rounded-lg hover:from-orange-500 hover:to-yellow-500 disabled:opacity-50 
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-[#6596d8] to-[#b5e4e6] text-white 
+                             rounded-lg hover:from-[#2e75d4] hover:to-[#8ddee1] disabled:opacity-50 
                              disabled:cursor-not-allowed font-semibold flex items-center justify-center gap-2 
                              transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 >
