@@ -9,15 +9,18 @@ datasource db {
 }
 
 model pacientes {
-  paciente_id      Int              @id @default(autoincrement())
-  nombre           String           @db.VarChar(120)
-  documento        String?          @unique(map: "documento") @db.VarChar(40)
-  email            String?          @unique(map: "email") @db.VarChar(120)
-  telefono         String?          @db.VarChar(40)
-  fecha_nacimiento DateTime?        @db.Date
+  paciente_id      Int               @id @default(autoincrement())
+  nombre           String            @db.VarChar(120)
+  apellido         String            @db.VarChar(120)
+  documento        String?           @unique(map: "documento") @db.VarChar(40)
+  email            String?           @unique(map: "email") @db.VarChar(120)
+  telefono         String?           @db.VarChar(40)
+  genero           pacientes_genero?
+  fecha_nacimiento DateTime?         @db.Date
   obra_social_id   Int?
-  estado           pacientes_estado @default(activo)
-  obras_sociales   obras_sociales?  @relation(fields: [obra_social_id], references: [obra_social_id], map: "fk_paciente_os")
+  fecha_registro   DateTime?         @db.DateTime(0)
+  estado           pacientes_estado  @default(activo)
+  obras_sociales   obras_sociales?   @relation(fields: [obra_social_id], references: [obra_social_id], map: "fk_paciente_os")
   turnos           turnos[]
 
   @@index([obra_social_id], map: "fk_paciente_os")
@@ -38,7 +41,7 @@ model profesionales {
 }
 
 model turnos {
-  turno_id       BigInt          @id @default(autoincrement())
+  turno_id       Int             @id @default(autoincrement())
   profesional_id Int
   paciente_id    Int
   obra_social_id Int?
@@ -114,12 +117,12 @@ enum profesionales_estado {
   inactivo
 }
 
-enum usuarios_estado {
+enum agenda_semanal_estado {
   activo
   inactivo
 }
 
-enum agenda_semanal_estado {
+enum usuarios_estado {
   activo
   inactivo
 }
@@ -135,4 +138,10 @@ enum turnos_estado {
 enum pacientes_estado {
   activo
   inactivo
+}
+
+enum pacientes_genero {
+  Mujer
+  Hombre
+  otro
 }
