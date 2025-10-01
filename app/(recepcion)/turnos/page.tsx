@@ -10,6 +10,8 @@ const Plus = ({ className }: { className?: string }) => (
   </svg>
 );
 
+
+
 const Calendar = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -409,17 +411,31 @@ export default function TurnosPage() {
     cargarTurnos();
   }, []);
 
-  const turnosPorDia = (day: Date) =>
-    turnos
+  const [mostrarHistorico, setMostrarHistorico] = useState(false);
+
+  const turnosPorDia = (day: Date) => {
+    const ahora = new Date();
+    return turnos
       .filter((t) => {
         const inicio = new Date(t.inicio);
-        return (
+
+        // Filtrar por día
+        const mismoDia =
           inicio.getFullYear() === day.getFullYear() &&
           inicio.getMonth() === day.getMonth() &&
-          inicio.getDate() === day.getDate()
-        );
+          inicio.getDate() === day.getDate();
+
+        if (!mismoDia) return false;
+
+        // Si NO se muestra histórico → solo turnos de hoy en adelante
+        if (!mostrarHistorico && day.toDateString() === ahora.toDateString()) {
+          return inicio >= ahora;
+        }
+
+        return true; // muestra todo lo demás
       })
       .sort((a, b) => new Date(a.inicio).getTime() - new Date(b.inicio).getTime());
+  };
 
   const getColorByProfession = (profesion: string) => {
     const colors: { [key: string]: string } = {
@@ -511,6 +527,29 @@ export default function TurnosPage() {
         <Plus className="w-5 h-5" />
         Agregar Nuevo Turno
       </button>
+      
+      {/* Checkbox Mostrar Histórico */}
+      <div
+        className="inline-flex items-center gap-2 px-3 py-2 mb-6 
+                  bg-gradient-to-r from-[#f8fafc] to-[#eef6fb] 
+                  border border-gray-200 rounded-lg shadow-sm 
+                  hover:shadow-md transition-all duration-200"
+      >
+        <input
+          id="mostrarHistorico"
+          type="checkbox"
+          checked={mostrarHistorico}
+          onChange={(e) => setMostrarHistorico(e.target.checked)}
+          className="h-4 w-4 text-[#6596d8] border-gray-300 rounded focus:ring-[#6596d8] cursor-pointer"
+        />
+        <label
+          htmlFor="mostrarHistorico"
+          className="text-sm font-semibold text-gray-700 cursor-pointer select-none"
+        >
+          Histórico
+        </label>
+      </div>
+
 
       {/* Calendario */}
       {isLoadingTurnos ? (

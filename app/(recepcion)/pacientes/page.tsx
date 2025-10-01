@@ -339,32 +339,34 @@ export default function GestionPacientesPage() {
       </div>
 
       {/* Top controls */}
-      <div className="space-y-4 mb-6">
-        <div className="flex flex-col items-center gap-4 mb-">
-          <button
-            className="px-6 py-3 bg-gradient-to-r from-[#6596d8] to-[#b5e4e6] text-white rounded-lg 
-               hover:from-[#2e75d4] hover:to-[#8ddee1] shadow-lg transform transition-all duration-200 
-               hover:scale-[1.02] active:scale-[0.98] font-semibold flex items-center gap-2"
-            onClick={() => setIsModalOpen(true)}
-          >
-            <UserPlus className="w-5 h-5" />
-            Registrar Nuevo Paciente
-          </button>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        {/* Botón principal */}
+        <button
+          className="px-6 py-3 bg-gradient-to-r from-[#6596d8] to-[#b5e4e6] text-white rounded-lg 
+                    hover:from-[#2e75d4] hover:to-[#8ddee1] shadow-lg transform transition-all duration-200 
+                    hover:scale-[1.02] active:scale-[0.98] font-semibold flex items-center gap-2"
+          onClick={() => setIsModalOpen(true)}
+        >
+          <UserPlus className="w-5 h-5" />
+          Registrar Nuevo Paciente
+        </button>
 
-          <div className="flex flex-col sm:flex-row items-center gap-3">
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Buscar por DNI, nombre o apellido..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none 
-                   focus:ring-2 focus:ring-[#6596d8] focus:border-transparent transition-all duration-200"
-              />
-            </div>
+        {/* Filtros y buscador */}
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          {/* Buscador */}
+          <div className="relative w-full sm:w-83">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Buscar por DNI, nombre o apellido..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg 
+                        focus:outline-none focus:ring-2 focus:ring-[#6596d8] focus:border-transparent 
+                        transition-all duration-200"
+            />
           </div>
-        </div>
+      </div>
 
         {/* Filters */}
 
@@ -541,8 +543,12 @@ export default function GestionPacientesPage() {
                       Documento *
                     </label>
                     <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]{7,10}"
+                      title="Ingrese un número de documento válido (solo números, 7 a 10 dígitos)"
                       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 
-                                 focus:ring-[#6596d8] focus:border-transparent transition-all duration-200"
+                                focus:ring-[#6596d8] focus:border-transparent transition-all duration-200"
                       placeholder="DNI sin puntos"
                       value={form.documento}
                       onChange={onChange('documento')}
@@ -586,8 +592,11 @@ export default function GestionPacientesPage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Nombre *</label>
                     <input
+                      type="text"
+                      pattern="[A-Za-zÁÉÍÓÚÑáéíóúñ ]+"
+                      title="Solo se permiten letras"
                       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 
-                                 focus:ring-[#6596d8] focus:border-transparent transition-all duration-200"
+                                focus:ring-[#6596d8] focus:border-transparent transition-all duration-200"
                       placeholder="Ingrese el nombre"
                       value={form.nombre}
                       onChange={onChange('nombre')}
@@ -599,8 +608,11 @@ export default function GestionPacientesPage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Apellido *</label>
                     <input
+                      type="text"
+                      pattern="[A-Za-zÁÉÍÓÚÑáéíóúñ ]+"
+                      title="Solo se permiten letras"
                       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 
-                                 focus:ring-[#6596d8] focus:border-transparent transition-all duration-200"
+                                focus:ring-[#6596d8] focus:border-transparent transition-all duration-200"
                       placeholder="Ingrese el apellido"
                       value={form.apellido}
                       onChange={onChange('apellido')}
@@ -682,8 +694,11 @@ export default function GestionPacientesPage() {
                       Teléfono *
                     </label>
                     <input
+                      type="tel"
+                      pattern="[0-9]{8,15}"
+                      title="Ingrese un teléfono válido (8 a 15 dígitos)"
                       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 
-                                 focus:ring-[#6596d8] focus:border-transparent transition-all duration-200"
+                                focus:ring-[#6596d8] focus:border-transparent transition-all duration-200"
                       placeholder="Número de teléfono"
                       value={form.telefono}
                       onChange={onChange('telefono')}
@@ -697,11 +712,12 @@ export default function GestionPacientesPage() {
               <div>
                 <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
                   <Shield className="w-5 h-5 text-[#6596d8]" />
-                  Cobertura Médica
+                  Cobertura Médica 
                 </h3>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Obra Social</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Obra Social *</label>
                   <select
+                    required
                     className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 
                                focus:ring-[#6596d8] focus:border-transparent transition-all duration-200
                                appearance-none bg-white"
