@@ -87,6 +87,14 @@ type Profesional = {
   profesiones: { nombre: string };
 };
 
+type Agenda = {
+  profesional_id: number;
+  dia_semana: number;
+  hora_inicio: string;
+  hora_fin: string;
+  slot_min: number;
+}
+
 /* ===================== Utils ===================== */
 const norm = (s: string) =>
   s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
@@ -258,7 +266,14 @@ export default function TurnosPage() {
   const [profesionales, setProfesionales] = useState<Profesional[]>([]);
   const [pacienteId, setPacienteId] = useState("");     // guardamos como string para el combo
   const [profesionalId, setProfesionalId] = useState(""); // idem
-  const [fecha, setFecha] = useState("");
+  const hoy = new Date();
+  const yyyy = hoy.getFullYear();
+  const mm = String(hoy.getMonth() + 1).padStart(2, "0"); // meses empiezan en 0
+  const dd = String(hoy.getDate()).padStart(2, "0");
+
+  const fechaLocal = `${yyyy}-${mm}-${dd}`;
+  const [fecha, setFecha] = useState(fechaLocal);
+  const [horarios, setHorarios] = useState<string[]>([]);
   const [hora, setHora] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -291,6 +306,47 @@ export default function TurnosPage() {
     fetch("/api/profesionales").then((res) => res.json()).then(setProfesionales);
   }, []);
 
+  useEffect(() => {
+    const cargarHorarios = async () => {
+      if (!profesionalId || !fecha) return;
+
+      const profesional_id = profesionalId;
+      const dia_semana = new Date(fecha).getDay(); // (Domingo-Sábado : 0-6)
+
+      try {
+        const res = await fetch(
+          `/api/agenda_semanal?profesional_id=${profesional_id}&dia_semana=${dia_semana}`
+        );
+        const data: Agenda = await res.json();
+
+        // Array para contener las opciones de horario
+        const arrayHorarios: string[] = [];
+        // Inicio y fin de la agenda para el profesional y día seleccionado
+        let inicio = new Date(`${data.hora_inicio}`);
+        let fin = new Date(`${data.hora_fin}`);
+
+        // Este while es para ir aumentando la variable inicio en "slot_min" minutos
+        while (inicio < fin) {
+          // console.log(inicio);
+          arrayHorarios.push(
+            inicio.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })
+          );
+          inicio.setMinutes(inicio.getMinutes() + data.slot_min);
+        }
+
+        // console.log("Horario:", arrayHorarios)
+
+        setHorarios(arrayHorarios);
+        setHora(arrayHorarios[0]);
+        
+      } catch (error) {
+        console.error("Error cargando horarios:", error);
+      }
+    };
+
+    cargarHorarios();
+  }, [profesionalId, fecha]) // Esto lo hago para que se ejecute todo esta sección de código cuando cambian los estados "profesionalId" ó "fecha"
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -316,7 +372,7 @@ export default function TurnosPage() {
 
       setPacienteId("");
       setProfesionalId("");
-      setFecha("");
+      setFecha(fechaLocal);
       setHora("");
 
       await cargarTurnos();
@@ -583,38 +639,44 @@ export default function TurnosPage() {
                 />
               </div>
 
-              {/* Fecha y Hora */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-orange-400" />
-                    Fecha
-                  </label>
-                  <input
-                    type="date"
-                    value={fecha}
-                    onChange={(e) => setFecha(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 
-                               focus:ring-orange-400 focus:border-transparent transition-all duration-200"
-                    required
-                  />
-                </div>
+              {/* Fecha y Hora (sólo se muestra si es que tengo seleccionado un profesional) */}
+              { profesionalId && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-orange-400" />
+                      Fecha
+                    </label>
+                    <input
+                      type="date"
+                      value={fecha}
+                      onChange={(e) => setFecha(e.target.value)}
+                      className="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 
+                                focus:ring-orange-400 focus:border-transparent transition-all duration-200"
+                      required
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-orange-400" />
-                    Hora
-                  </label>
-                  <input
-                    type="time"
-                    value={hora}
-                    onChange={(e) => setHora(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 
-                               focus:ring-orange-400 focus:border-transparent transition-all duration-200"
-                    required
-                  />
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-orange-400" />
+                      Hora
+                    </label>
+                    <select
+                      value={hora}
+                      onChange={(e) => setHora(e.target.value)}
+                      className="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all duration-200"
+                      required
+                    >
+                      {horarios.map((h, i) => (
+                        <option key={i} value={h}>
+                          {h}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {successMessage && (
                 <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
