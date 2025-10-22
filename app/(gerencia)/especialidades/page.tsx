@@ -114,6 +114,13 @@ export default function EspecialidadesPage() {
     }
   };
 
+  useEffect(() => {
+    if (mensaje) {
+      const timer = setTimeout(() => setMensaje(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [mensaje]);
+
   const especialidadesFiltradas = especialidades.filter((esp) =>
     esp.nombre.toLowerCase().includes(busqueda.toLowerCase())
   );
@@ -126,7 +133,7 @@ export default function EspecialidadesPage() {
       <div className="absolute top-1/2 left-1/4 w-64 h-64 bg-green-100/40 rounded-full blur-2xl"></div>
 
       <div className="relative z-10 w-full max-w-[1600px] mx-auto">
-        {/* Barra decorativa estilo navbar */}
+        {/* Barra decorativa estilo navbar (CONFLICTO RESUELTO) */}
         <div className="h-16 bg-gradient-to-r from-[#16a34a] via-[#22c55e] to-[#86efac] rounded-2xl shadow-xl mb-6 flex items-center px-8 relative overflow-hidden">
           <div className="absolute inset-0 bg-white/5"></div>
           <div className="absolute right-0 top-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
@@ -138,6 +145,7 @@ export default function EspecialidadesPage() {
               <div className="w-3 h-3 bg-white/60 rounded-full"></div>
               <div className="w-3 h-3 bg-white/40 rounded-full"></div>
             </div>
+            {/* CÓDIGO CONSERVADO DE gerencia-front */}
             <div className="h-8 w-px bg-white/30 mx-2"></div>
             <EspecialidadIcon className="w-6 h-6 text-white/90" />
             <span className="text-white/90 font-bold text-lg">Especialidades Médicas</span>

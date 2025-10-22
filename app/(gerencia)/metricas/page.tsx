@@ -2,6 +2,7 @@
 'use client';
 
 import Link from 'next/link';
+// Nota: Se asume que estos componentes existen en la ruta especificada
 import { TurnosPieChart } from '@/components/TurnosPieChart';
 import { ObraSocialPieChart } from '@/components/ObraSocialPieChart';
 import { useEffect, useState } from 'react';
@@ -70,9 +71,6 @@ const KpiCard = ({ title, value, icon: Icon, colorClass, loading }: { title: str
   </div>
 );
 
-// --- Componente PieChartPlaceholder (Para tus gráficos de torta) ---
-
-
 // --- Componente ActivityLog (Registro de actividad) ---
 const ActivityLog = () => {
     const [activities, setActivities] = useState<Array<{ time: string; description: string; tipo: string }>>([]);
@@ -82,7 +80,8 @@ const ActivityLog = () => {
         const fetchActivities = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('/api/gerencia/actividad-reciente?limite=5');
+                // Nota: se asume que esta API existe y retorna datos
+                const response = await fetch('/api/gerencia/actividad-reciente?limite=5'); 
                 const result = await response.json();
                 
                 if (result.actividades && Array.isArray(result.actividades)) {
@@ -139,16 +138,17 @@ const ActivityLog = () => {
                     ))}
                 </ul>
             )}
-            <Link href="/gerencia/historialturnos" className="mt-6 inline-flex items-center text-sm text-green-600 font-bold hover:text-green-700 transition-colors group">
+            {/* CONFLICTO RESUELTO: Se mantiene la versión con la ruta completa y el estilo moderno */}
+            <Link 
+                href="/gerencia/historialturnos" 
+                className="mt-6 inline-flex items-center text-sm text-green-600 font-bold hover:text-green-700 transition-colors group"
+            >
                 Ver historial completo 
                 <span className="ml-1 group-hover:translate-x-1 transition-transform">→</span>
             </Link>
         </div>
     );
 }
-
-
-
 
 
 export default function GerenciaPage() {
@@ -194,7 +194,8 @@ export default function GerenciaPage() {
             const userStr = localStorage.getItem('user');
             if (userStr) {
                 const user = JSON.parse(userStr);
-                setGerenteName(user.nombre || 'Gerente');
+                // Asume que 'nombre' es una propiedad válida
+                setGerenteName(user.nombre || 'Gerente'); 
             }
         } catch (error) {
             console.error('Error al obtener usuario:', error);
@@ -210,7 +211,8 @@ export default function GerenciaPage() {
     const limpiarFiltro = () => {
         setFechaInicio('');
         setFechaFin('');
-        setTimeout(() => fetchKpis(), 0);
+        // Usamos un timeout para asegurar que el estado se actualiza antes de la llamada
+        setTimeout(() => fetchKpis(), 0); 
     };
     
     return (
@@ -244,7 +246,8 @@ export default function GerenciaPage() {
                 <header 
                     className="relative p-8 text-white rounded-2xl shadow-2xl overflow-hidden border-4 border-green-200/50"
                     style={{
-                        backgroundImage: 'url(/images/fondo-gerencia.jpeg)',
+                        // Nota: Se asume que la imagen existe en la ruta /public/images/fondo-gerencia.jpeg
+                        backgroundImage: 'url(/images/fondo-gerencia.jpeg)', 
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                     }}
@@ -318,10 +321,10 @@ export default function GerenciaPage() {
                 {/* 3. Métricas Clave (Gráficos de Torta) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
-                    {/* ⬅️ REEMPLAZO: Gráfico 1 - Turnos REAL */}
+                    {/* Gráfico 1 - Turnos */}
                     <TurnosPieChart />
 
-                    {/* ⬅️ REEMPLAZO: Gráfico 2 - Obra Social REAL */}
+                    {/* Gráfico 2 - Obra Social */}
                     <ObraSocialPieChart />
 
                 </div>
