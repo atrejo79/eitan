@@ -140,7 +140,7 @@ const ActivityLog = () => {
             )}
             {/* CONFLICTO RESUELTO: Se mantiene la versión con la ruta completa y el estilo moderno */}
             <Link 
-                href="/gerencia/historialturnos" 
+                href="/historialturnos" 
                 className="mt-6 inline-flex items-center text-sm text-green-600 font-bold hover:text-green-700 transition-colors group"
             >
                 Ver historial completo 
